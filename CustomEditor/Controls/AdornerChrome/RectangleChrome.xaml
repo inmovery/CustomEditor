@@ -1,0 +1,88 @@
+﻿<UserControl x:Class="CustomEditor.Controls.AdornerChrome.RectangleChrome"
+			 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:thumbs="clr-namespace:CustomEditor.Controls.Thumbs"
+			 mc:Ignorable="d">
+	<Grid Width="{Binding Path=Width}"
+		  Height="{Binding Path=Height}">
+		<Rectangle Width="{Binding Path=Width}"
+				   Height="{Binding Path=Height}"
+				   Fill="Transparent"
+				   StrokeThickness="1"
+				   Stroke="Blue" />
+		<thumbs:MoveThumb Style="{StaticResource MoveThumbStyle}" />
+		<thumbs:ResizeThumb VerticalAlignment="Top"
+							HorizontalAlignment="Left"
+							Style="{StaticResource ResizeThumbStyle}"
+							Cursor="SizeNWSE" />
+
+		<thumbs:ResizeThumb VerticalAlignment="Top"
+							HorizontalAlignment="Center"
+							Style="{StaticResource ResizeThumbStyle}"
+							Cursor="SizeNS" />
+
+		<thumbs:ResizeThumb VerticalAlignment="Top"
+							HorizontalAlignment="Right"
+							Style="{StaticResource ResizeThumbStyle}"
+							Cursor="SizeNESW" />
+
+		<thumbs:ResizeThumb VerticalAlignment="Center"
+							HorizontalAlignment="Right"
+							Style ="{StaticResource ResizeThumbStyle}"
+							Cursor="SizeWE" />
+
+		<thumbs:ResizeThumb VerticalAlignment="Bottom"
+							HorizontalAlignment="Right"
+							Style ="{StaticResource ResizeThumbStyle}"
+							Cursor="SizeNWSE" />
+
+		<thumbs:ResizeThumb VerticalAlignment="Bottom"
+							HorizontalAlignment="Center"
+							Style ="{StaticResource ResizeThumbStyle}"
+							Cursor="SizeNS" />
+
+		<thumbs:ResizeThumb VerticalAlignment="Bottom"
+							HorizontalAlignment="Left"
+							Style ="{StaticResource ResizeThumbStyle}"
+							Cursor="SizeNESW" />
+
+		<thumbs:ResizeThumb VerticalAlignment="Center"
+							HorizontalAlignment="Left"
+							Style ="{StaticResource ResizeThumbStyle}"
+							Cursor="SizeWE" />
+
+		<thumbs:RotateThumb Style="{StaticResource RotateThumbControl}"
+							  Margin="-18,-18,0,0"
+							  VerticalAlignment="Top"
+							  HorizontalAlignment="Left" />
+
+		<thumbs:RotateThumb Style="{StaticResource RotateThumbControl}"
+							  Margin="0,-18,-18,0"
+							  VerticalAlignment="Top"
+							  HorizontalAlignment="Right">
+			<thumbs:RotateThumb.RenderTransform>
+				<RotateTransform Angle="90" />
+			</thumbs:RotateThumb.RenderTransform>
+		</thumbs:RotateThumb>
+
+		<thumbs:RotateThumb Style="{StaticResource RotateThumbControl}"
+							  Margin="0,0,-18,-18"
+							  VerticalAlignment="Bottom"
+							  HorizontalAlignment="Right">
+			<thumbs:RotateThumb.RenderTransform>
+				<RotateTransform Angle="180" />
+			</thumbs:RotateThumb.RenderTransform>
+		</thumbs:RotateThumb>
+
+		<thumbs:RotateThumb Style="{StaticResource RotateThumbControl}"
+							  Margin="-18,0,0,-18"
+							  VerticalAlignment="Bottom"
+							  HorizontalAlignment="Left">
+			<thumbs:RotateThumb.RenderTransform>
+				<RotateTransform Angle="270" />
+			</thumbs:RotateThumb.RenderTransform>
+		</thumbs:RotateThumb>
+	</Grid>
+</UserControl>

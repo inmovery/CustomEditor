@@ -1,0 +1,99 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+					xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+					xmlns:controls="clr-namespace:CustomEditor.Controls"
+					xmlns:converters="clr-namespace:CustomEditor.Converters">
+	<converters:StringNullOrEmptyToVisibilityConverter x:Key="StringNullOrEmptyToBoolConverter" />
+	<converters:BoolToBrushConverter x:Key="BoolToBrushConverter" />
+	<converters:BoolToThicknessConverter x:Key="BoolToThicknessConverter" />
+
+	<Style TargetType="{x:Type controls:ButtonWithImage}"
+		   x:Key="RegularButtonWithImage">
+		<Setter Property="Cursor"
+				Value="Hand" />
+		<Setter Property="Template">
+			<Setter.Value>
+				<ControlTemplate TargetType="{x:Type controls:ButtonWithImage}">
+					<Border Background="Transparent">
+						<Path Stretch="Uniform"
+							  Data="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=controls:ButtonWithImage}, Path=PathImage}">
+							<Path.Style>
+								<Style TargetType="Path">
+									<Setter Property="Fill"
+											Value="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=controls:ButtonWithImage}, Path=Fill}" />
+									<Style.Triggers>
+										<DataTrigger Binding="{Binding Path=IsMouseOver, RelativeSource={RelativeSource FindAncestor, AncestorType=controls:ButtonWithImage}}"
+													 Value="True">
+											<Setter Property="Fill"
+													Value="#b8b5bd" />
+										</DataTrigger>
+										<DataTrigger Binding="{Binding Path=IsMouseCaptured, RelativeSource={RelativeSource FindAncestor, AncestorType=controls:ButtonWithImage}}"
+													 Value="True">
+											<Setter Property="Fill"
+													Value="#ffffff" />
+										</DataTrigger>
+										<DataTrigger Binding="{Binding Path=IsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=controls:ButtonWithImage}}"
+													 Value="False">
+											<Setter Property="Fill"
+													Value="#85818c" />
+										</DataTrigger>
+									</Style.Triggers>
+								</Style>
+							</Path.Style>
+						</Path>
+					</Border>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+	</Style>
+
+	<Style TargetType="{x:Type controls:ButtonWithImage}"
+		   x:Key="ActivatedButtonWithImage">
+		<Setter Property="Cursor"
+				Value="Hand" />
+		<Setter Property="Template">
+			<Setter.Value>
+				<ControlTemplate TargetType="{x:Type controls:ButtonWithImage}">
+					<Border Background="Transparent"
+							BorderThickness="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=controls:ButtonWithImage}, Path=IsActive, Converter={StaticResource BoolToThicknessConverter}, ConverterParameter=2.0}"
+							BorderBrush="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=controls:ButtonWithImage}, Path=IsActive, Converter={StaticResource BoolToBrushConverter}, ConverterParameter={StaticResource BlackBrush}}"
+							CornerRadius="5"
+							Padding="5">
+						<Path Stretch="Uniform"
+							  Data="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=controls:ButtonWithImage}, Path=PathImage}">
+							<Path.Style>
+								<Style TargetType="Path">
+									<Setter Property="Fill"
+											Value="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=controls:ButtonWithImage}, Path=Fill}" />
+									<Style.Triggers>
+										<MultiDataTrigger>
+											<MultiDataTrigger.Conditions>
+												<Condition Binding="{Binding Path=IsMouseOver, RelativeSource={RelativeSource FindAncestor, AncestorType=controls:ButtonWithImage}}"
+												           Value="True" />
+												<Condition Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=controls:ButtonWithImage}, Path=IsActive}"
+												           Value="False" />
+											</MultiDataTrigger.Conditions>
+											<MultiDataTrigger.Setters>
+												<Setter Property="Fill"
+												        Value="#b8b5bd" />
+											</MultiDataTrigger.Setters>
+										</MultiDataTrigger>
+										<DataTrigger Binding="{Binding Path=IsMouseCaptured, RelativeSource={RelativeSource FindAncestor, AncestorType=controls:ButtonWithImage}}"
+													 Value="True">
+											<Setter Property="Fill"
+													Value="#ffffff" />
+										</DataTrigger>
+										<DataTrigger Binding="{Binding Path=IsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=controls:ButtonWithImage}}"
+													 Value="False">
+											<Setter Property="Fill"
+													Value="#85818c" />
+										</DataTrigger>
+									</Style.Triggers>
+								</Style>
+							</Path.Style>
+						</Path>
+					</Border>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+	</Style>
+</ResourceDictionary>
