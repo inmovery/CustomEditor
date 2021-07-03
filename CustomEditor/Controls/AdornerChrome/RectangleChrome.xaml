@@ -59,7 +59,7 @@
 							  HorizontalAlignment="Left" />
 
 		<thumbs:RotateThumb Style="{StaticResource RotateThumbControl}"
-							  Margin="0,-18,-18,0"
+							  Margin="0,-20,-20,0"
 							  VerticalAlignment="Top"
 							  HorizontalAlignment="Right">
 			<thumbs:RotateThumb.RenderTransform>

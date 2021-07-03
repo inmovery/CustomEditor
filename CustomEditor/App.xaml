@@ -5,11 +5,15 @@
 	<Application.Resources>
 		<ResourceDictionary>
 			<ResourceDictionary.MergedDictionaries>
+				<ResourceDictionary Source="Styles/Constants.xaml" />
 				<ResourceDictionary Source="Styles/Colors.xaml" />
 				<ResourceDictionary Source="Styles/Fonts.xaml" />
 				<ResourceDictionary Source="Styles/Icons.xaml" />
 				<ResourceDictionary Source="Styles/Buttons.xaml" />
 				<ResourceDictionary Source="Styles/Thumbs.xaml" />
+				<ResourceDictionary Source="Styles/Sliders.xaml" />
+				<ResourceDictionary Source="Styles/TextBox.xaml" />
+				<ResourceDictionary Source="Styles/Controls.xaml" />
 			</ResourceDictionary.MergedDictionaries>
 		</ResourceDictionary>
 	</Application.Resources>

@@ -1,7 +1,7 @@
 ﻿using CustomEditor.Models;
 using CustomEditor.ViewModels.Base;
 
-namespace CustomEditor.Controls.ToolPanel
+namespace CustomEditor.ViewModels
 {
 	public class ToolPanelVm : BaseViewModel
 	{

@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using CustomEditor.Controls.Adorners;
+using CustomEditor.Gestures;
 using CustomEditor.Helpers;
 using CustomEditor.Models.Events;
 using Action = CustomEditor.Models.Action;
@@ -15,6 +17,71 @@ namespace CustomEditor.Controls
 {
 	public class CustomCanvas : Canvas
 	{
+		public double TopLimit { get; set; }
+		public double RightLimit { get; set; }
+		public double BottomLimit { get; set; }
+		public double LeftLimit { get; set; }
+		//public bool IsPanning => Keyboard.IsKeyDown(PanningKey);
+		//public bool IsZooming => Keyboard.IsKeyDown(ZoomKey);
+		public bool NeedMeasure { get; set; }
+
+		private TranslateTransform _translateTransform;
+		private ScaleTransform _scaleTransform;
+		private Zoom _zoomGesture;
+		private Vector _offset;
+		private Size _extent;
+		private Size _initialExtent;
+		private Size _viewport;
+		private Point _panInitialPosition;
+		private CustomCanvas _parent => this;
+		private Point _viewportBottomRightInitial;
+		private Point _viewportTopLeftInitial;
+
+		private double HighestElement => _parent.TopLimit; // _parent.IsDrawing ? _parent.TopLimit : this.TopLimit;
+
+		private double LowestElement => _parent.BottomLimit; // _parent.IsDrawing ? _parent.BottomLimit : this.BottomLimit;
+
+		private double MostLeftElement => _parent.LeftLimit; // _parent.IsDrawing ? _parent.LeftLimit : this.LeftLimit;
+
+		private double MostRightElement => _parent.RightLimit; // _parent.IsDrawing ? _parent.RightLimit : this.RightLimit;
+
+
+		private ScrollMode _canvasContainer;
+		public ScrollMode ScrollContainer => _canvasContainer;
+
+
+		public readonly ScaleTransform ScaleTransform = new ScaleTransform();
+		public readonly TranslateTransform TranslateTransform = new TranslateTransform();
+
+		public override void OnApplyTemplate()
+		{
+			ScrollContainer.Initalize(this);
+
+			TranslateTransform.Changed += OnTranslateChanged;
+		}
+
+		private void OnTranslateChanged(object sender, EventArgs e)
+		{
+			RaiseScrollingEvent(e);
+		}
+
+		public static readonly RoutedEvent ScrollingEvent = EventManager.RegisterRoutedEvent(nameof(Scrolling), RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(CustomCanvas));
+		/// <summary>
+		/// Occurs whenever <see cref="RichItemsControl.TranslateTransform"/> changes.
+		/// </summary>
+		public event RoutedEventHandler Scrolling
+		{
+			add { AddHandler(ScrollingEvent, value); }
+			remove { RemoveHandler(ScrollingEvent, value); }
+		}
+
+		internal void RaiseScrollingEvent(object context)
+		{
+			RoutedEventArgs newEventArgs = new RoutedEventArgs(ScrollingEvent, context);
+			RaiseEvent(newEventArgs);
+		}
+
+
 		private LinkedList<Action> _undo;
 		private LinkedList<Action> _redo;
 		private UIElement _selectedItem;
@@ -64,6 +131,18 @@ namespace CustomEditor.Controls
 			set => SetValue(IsEditToolActiveProperty, value);
 		}
 
+		public static DependencyProperty MousePositionProperty = DependencyProperty.Register(
+			nameof(MousePosition),
+			typeof(Point),
+			typeof(CustomCanvas),
+			new FrameworkPropertyMetadata(default(Point)));
+
+		public Point MousePosition
+		{
+			get => (Point)GetValue(MousePositionProperty);
+			set => SetValue(MousePositionProperty, value);
+		}
+
 		public UIElement SelectedItem
 		{
 			get => _selectedItem;
@@ -97,8 +176,35 @@ namespace CustomEditor.Controls
 			Children.Remove(SelectedItem);
 		}
 
+		public void AdjustScroll()
+		{
+			ScrollContainer?.AdjustScrollVertically();
+			ScrollContainer?.AdjustScrollHorizontally();
+		}
+
+		public Rect BoundsRelativeTo(FrameworkElement element, Visual relativeTo)
+		{
+			return element?.TransformToVisual(relativeTo).TransformBounds(LayoutInformation.GetLayoutSlot(element)) ??
+			       new Rect();
+		}
+
 		protected override void OnPreviewMouseMove(MouseEventArgs eventArgs)
 		{
+			/*
+			var elementRect = BoundsRelativeTo(SelectedItem as FrameworkElement, this);
+
+			var top = elementRect.Top;
+			var bottom = elementRect.Bottom;
+			var right = elementRect.Right;
+			var left = elementRect.Left;
+
+			TopLimit = Math.Min(TopLimit, top);
+			BottomLimit = Math.Max(BottomLimit, bottom);
+			RightLimit = Math.Max(RightLimit, right);
+			LeftLimit = Math.Min(LeftLimit, left);
+			AdjustScroll();
+			*/
+
 			if (IsShiftKeyPressed && eventArgs.LeftButton == MouseButtonState.Pressed)
 			{
 				if (_startPoint.X < 0)
@@ -157,12 +263,16 @@ namespace CustomEditor.Controls
 
 		protected override void OnPreviewMouseUp(MouseButtonEventArgs eventArgs)
 		{
-			SelectedItem = _previewShape;
+			if (IsShiftKeyPressed)
+			{
+				SelectedItem = _previewShape;
 
-			AddSelectionAdorner(SelectedItem);
-			Children.Remove(SelectedItem);
+				AddSelectionAdorner(SelectedItem);
+				Children.Remove(SelectedItem);
 
-			_previewShape = null;
+				_previewShape = null;
+			}
+
 			_startPoint.X = _startPoint.Y = -1;
 			_endPoint.X = _endPoint.Y = -1;
 
@@ -210,12 +320,12 @@ namespace CustomEditor.Controls
 			}
 		}
 
-		private void ChangeSelectionColor(UIElement item, SolidColorBrush colorBrush)
+		private void ChangeSelectionColor(UIElement item, Brush colorBrush)
 		{
-			if (item is PartiallyRoundedRectangle rectangleShape)
+			if (item is AdvancedRectangle rectangleShape)
 				rectangleShape.Fill = colorBrush;
 
-			if (item is Polyline polylineShape)
+			if (item is AdvancedPolyline polylineShape)
 				polylineShape.Stroke = colorBrush;
 		}
 
@@ -272,7 +382,7 @@ namespace CustomEditor.Controls
 					return;
 
 				var isSelectedElementNan = double.IsNaN(selectedElement.Width);
-				if (isSelectedElementNan && uiElement is Polyline polyline)
+				if (isSelectedElementNan && uiElement is AdvancedPolyline polyline)
 					EditorHelper.UpdatePolylineLayoutProperties(ref polyline);
 
 				AdornerLayer.Add(rectangleAdorner);
@@ -281,7 +391,7 @@ namespace CustomEditor.Controls
 
 		private void OnDoubleClickByAdorner(UIElement adornedElement)
 		{
-			if (adornedElement is PartiallyRoundedRectangle)
+			if (adornedElement is AdvancedRectangle)
 				return;
 
 			ActivatePolylineEditor(adornedElement);

@@ -4,12 +4,14 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using CustomEditor.Commands;
 using CustomEditor.Controls;
-using CustomEditor.Controls.ToolPanel;
 using CustomEditor.Helpers;
 using CustomEditor.Models;
+using CustomEditor.Models.Events;
+using CustomEditor.Services;
 using CustomEditor.ViewModels.Base;
 
 namespace CustomEditor.ViewModels
@@ -26,9 +28,32 @@ namespace CustomEditor.ViewModels
 
 		private bool _isDrawing;
 
+		private ToolPanelVm _toolData;
+		private VisualProperties _shapeProperties;
+
+		private ToolType _selectedToolType;
+
+		private readonly FileService _fileService;
+		//private readonly DialogService _dialogService;
+
+		private double _contentOffsetX;
+		private double _contentOffsetY;
+		private double _contentWidth;
+		private double _contentHeight;
+		private double _contentViewportWidth;
+		private double _contentViewportHeight;
+
 		public MainWindowViewModel()
 		{
 			ShapesCollection = new ObservableCollection<Shape>();
+			ShapeProperties = new VisualProperties();
+			ToolData = new ToolPanelVm();
+
+			ShapeProperties.BorderColorChanged += OnBorderColorChanged;
+			ShapeProperties.FillColorChanged += OnFillColorChanged;
+			ShapeProperties.ThicknessChanged += OnThicknessChanged;
+			ShapeProperties.WidthChanged += OnWidthChanged;
+			ShapeProperties.HeightChanged += OnHeightChanged;
 
 			WindowPreviewKeyDownCommand = new RelayCommand<KeyEventArgs>(HandleKeyEvent);
 			WindowPreviewKeyUpCommand = new RelayCommand<KeyEventArgs>(HandleKeyEvent);
@@ -42,6 +67,8 @@ namespace CustomEditor.ViewModels
 
 			ExportCommand = new RelayCommand(ExportCanvas);
 			DeleteCommand = new RelayCommand(DeleteSelectedShapes);
+
+			WindowLoadedCommand = new RelayCommand(WindowLoaded);
 		}
 
 		public ICommand ExportCommand { get; }
@@ -58,6 +85,10 @@ namespace CustomEditor.ViewModels
 		public ICommand RedoCommand { get; }
 
 		public ICommand ShowEditToolCommand { get; }
+
+		public ICommand WindowLoadedCommand { get; }
+
+		public bool IsActiveWidthAndHeight => WorkspaceCanvas?.SelectedItem is AdvancedRectangle;
 
 		public bool IsShiftKeyPressed
 		{
@@ -89,14 +120,167 @@ namespace CustomEditor.ViewModels
 			}
 		}
 
-		public ToolPanel ToolPanel => AncestorHelper.FindActiveWindow()?.FindName("ToolPanel") as ToolPanel;
 		public CustomCanvas WorkspaceCanvas => AncestorHelper.FindActiveWindow()?.FindName("Workspace") as CustomCanvas;
 
-		public ToolType SelectedToolType => (ToolPanel?.DataContext as ToolPanelVm)?.ActiveToolType ?? ToolType.Select;
+		public FilteredTextBox ThicknessInputField => AncestorHelper.FindActiveWindow()?.FindName("ThicknessInputField") as FilteredTextBox;
 
-		public bool IsShapeSelected => WorkspaceCanvas.SelectedItem is Shape;
+		public FilteredTextBox WidthInputField => AncestorHelper.FindActiveWindow()?.FindName("WidthInputField") as FilteredTextBox;
+
+		public FilteredTextBox HeightInputField => AncestorHelper.FindActiveWindow()?.FindName("HeightInputField") as FilteredTextBox;
+
+		public ToolType SelectedToolType => ToolData?.ActiveToolType ?? ToolType.Select;
+
+		public bool IsShapeSelected => WorkspaceCanvas?.SelectedItem is Shape;
 
 		public ObservableCollection<Shape> ShapesCollection { get; set; }
+
+		public VisualProperties ShapeProperties
+		{
+			get => _shapeProperties;
+			set
+			{
+				_shapeProperties = value;
+				UpdateSelectedShape();
+				RaisePropertyChanged();
+			}
+		}
+
+		public ToolPanelVm ToolData
+		{
+			get => _toolData;
+			set
+			{
+				_toolData = value;
+				RaisePropertyChanged();
+			}
+		}
+
+		public double ContentOffsetX
+		{
+			get => _contentOffsetX;
+			set
+			{
+				_contentOffsetX = value;
+				RaisePropertyChanged();
+			}
+		}
+
+		public double ContentOffsetY
+		{
+			get => _contentOffsetY;
+			set
+			{
+				_contentOffsetY = value;
+				RaisePropertyChanged();
+			}
+		}
+
+		public double ContentWidth
+		{
+			get => _contentWidth;
+			set
+			{
+				_contentWidth = value;
+				RaisePropertyChanged();
+			}
+		}
+
+		public double ContentHeight
+		{
+			get => _contentHeight;
+			set
+			{
+				_contentHeight = value;
+				RaisePropertyChanged();
+			}
+		}
+
+		public double ContentViewportWidth
+		{
+			get => _contentViewportWidth;
+			set
+			{
+				_contentViewportWidth = value;
+				RaisePropertyChanged();
+			}
+		}
+
+		public double ContentViewportHeight
+		{
+			get => _contentViewportHeight;
+			set
+			{
+				_contentViewportHeight = value;
+				RaisePropertyChanged();
+			}
+		}
+
+		private void WindowLoaded()
+		{
+			//WorkspaceCanvas.SelectedItemChanged += OnSelectedItemChanged;
+		}
+
+		private void OnSelectedItemChanged(object sender, SelectedItemChangedEventArgs eventArgs)
+		{
+			OnPropertyChanged(nameof(IsActiveWidthAndHeight));
+		}
+
+		private void OnBorderColorChanged()
+		{
+			if (WorkspaceCanvas.SelectedItem is AdvancedRectangle selectedRectangle)
+				selectedRectangle.Stroke = new SolidColorBrush(ShapeProperties.BorderColor);
+
+			if (WorkspaceCanvas.SelectedItem is AdvancedPolyline selectedPolyline)
+				selectedPolyline.Stroke = new SolidColorBrush(ShapeProperties.BorderColor);
+		}
+
+		private void OnFillColorChanged()
+		{
+			if (ShapeProperties.FillColor == null)
+				return;
+
+			var selectedFillColor = (Color) ShapeProperties.FillColor;
+			if (WorkspaceCanvas.SelectedItem is AdvancedRectangle selectedRectangle)
+				selectedRectangle.Fill = new SolidColorBrush(selectedFillColor);
+
+			if (WorkspaceCanvas.SelectedItem is AdvancedPolyline selectedPolyline)
+				selectedPolyline.Fill = new SolidColorBrush(selectedFillColor);
+		}
+
+		private void OnThicknessChanged()
+		{
+			var selectedThickness = ShapeProperties.Thickness;
+			if (WorkspaceCanvas.SelectedItem is AdvancedRectangle selectedRectangle)
+				selectedRectangle.StrokeThickness = selectedThickness;
+
+			if (WorkspaceCanvas.SelectedItem is AdvancedPolyline selectedPolyline)
+				selectedPolyline.StrokeThickness = selectedThickness;
+		}
+
+		private void OnWidthChanged()
+		{
+			var selectedWidth = ShapeProperties.Width;
+			if (selectedWidth < 1)
+				return;
+
+			if (WorkspaceCanvas.SelectedItem is AdvancedRectangle selectedRectangle)
+				selectedRectangle.Width = selectedWidth;
+		}
+
+		private void OnHeightChanged()
+		{
+			var selectedHeight = ShapeProperties.Height;
+			if (selectedHeight < 1)
+				return;
+
+			if (WorkspaceCanvas.SelectedItem is AdvancedRectangle selectedRectangle)
+				selectedRectangle.Height = selectedHeight;
+		}
+
+		private void UpdateSelectedShape()
+		{
+			// @todo: сделать обновление параметров выбранной фигуры 
+		}
 
 		private void DeleteSelectedShapes()
 		{
@@ -105,6 +289,7 @@ namespace CustomEditor.ViewModels
 
 		private void ExportCanvas()
 		{
+			// @todo: сделать экспорт
 		}
 
 		private void HandleKeyEvent(KeyEventArgs eventArgs)
@@ -118,7 +303,7 @@ namespace CustomEditor.ViewModels
 			if (_shape == null)
 				return;
 
-			var polyline = _shape as Polyline;
+			var polyline = _shape as AdvancedPolyline;
 			polyline.Points[polyline.Points.Count - 1] = eventArgs.GetPosition(WorkspaceCanvas);
 		}
 
@@ -143,7 +328,7 @@ namespace CustomEditor.ViewModels
 				}
 				else
 				{
-					var rectangleShape = _shape as PartiallyRoundedRectangle;
+					var rectangleShape = _shape as AdvancedRectangle;
 					if (rectangleShape == null)
 						return;
 
@@ -161,12 +346,13 @@ namespace CustomEditor.ViewModels
 			var test = eventArgs.GetPosition(WorkspaceCanvas);
 			if (_shape != null)
 			{
-				var polyline = _shape as Polyline;
+				var polyline = _shape as AdvancedPolyline;
 				if (eventArgs.ChangedButton == MouseButton.Left)
 					polyline.Points.Add(eventArgs.GetPosition(WorkspaceCanvas));
 				else
 				{
 					EditorHelper.UpdatePolylineLayoutProperties(ref polyline);
+					ToolData.ActiveToolType = ToolType.Select;
 
 					IsDrawing = false;
 					_shape = null;
@@ -216,6 +402,7 @@ namespace CustomEditor.ViewModels
 			if (SelectedToolType != ToolType.Rectangle)
 				return;
 
+			WorkspaceCanvas.SelectedItem = _shape;
 			WorkspaceCanvas.AddSelectionAdorner(_shape);
 
 			_shape = null;
@@ -232,14 +419,14 @@ namespace CustomEditor.ViewModels
 			var endX = Math.Max(_startPoint.X, _endPoint.X);
 			var endY = Math.Max(_startPoint.Y, _endPoint.Y);
 
-			_shape = new PartiallyRoundedRectangle()
+			_shape = new AdvancedRectangle()
 			{
 				Fill = new SolidColorBrush(Colors.Black),
 				Width = (endX - startX),
 				Height = (endY - startY),
 				MinWidth = 15,
 				MinHeight = 15,
-				RenderTransformOrigin = new Point(0.5, 0.5),
+				RenderTransformOrigin = new Point(0.5d, 0.5d),
 				SnapsToDevicePixels = true,
 				StrokeThickness = 2.0d,
 				Margin = new Thickness(startX, startY, 0.0d, 0.0d)
@@ -251,7 +438,7 @@ namespace CustomEditor.ViewModels
 
 		private void GeneratePolyline(Point initialPosition)
 		{
-			_shape = new Polyline()
+			_shape = new AdvancedPolyline()
 			{
 				Stroke = Brushes.Black,
 				StrokeThickness = 8,
@@ -270,6 +457,17 @@ namespace CustomEditor.ViewModels
 
 			Canvas.SetLeft(_shape, 0.0d);
 			Canvas.SetTop(_shape, 0.0d);
+		}
+
+		private void AddImage()
+		{
+			_fileService.OpenFileDialog(out var selectedImagePath);
+			var bitmapImage = new BitmapImage(new Uri(selectedImagePath));
+			var image = new Image()
+			{
+				Source = bitmapImage
+			};
+			WorkspaceCanvas.Children.Add(image);
 		}
 	}
 }

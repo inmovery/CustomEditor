@@ -3,16 +3,17 @@
 		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 		xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-		xmlns:local="clr-namespace:CustomEditor"
 		xmlns:vms="clr-namespace:CustomEditor.ViewModels"
 		xmlns:controls="clr-namespace:CustomEditor.Controls"
 		xmlns:converters="clr-namespace:CustomEditor.Converters"
-		xmlns:toolPanel="clr-namespace:CustomEditor.Controls.ToolPanel"
 		xmlns:behaviors="clr-namespace:CustomEditor.Behaviors"
 		xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+		xmlns:colorPicker="clr-namespace:CustomEditor.Controls.ColorPicker"
 		Title="MainWindow"
 		MinHeight="450"
 		MinWidth="800"
+		Height="450"
+		Width="800"
 		mc:Ignorable="d">
 	<Window.DataContext>
 		<vms:MainWindowViewModel />
@@ -26,8 +27,13 @@
 			<i:InvokeCommandAction Command="{Binding WindowPreviewKeyUpCommand}"
 								   PassEventArgsToCommand="True" />
 		</i:EventTrigger>
+		<i:EventTrigger EventName="Loaded">
+			<i:InvokeCommandAction Command="{Binding WindowLoadedCommand}"
+								   PassEventArgsToCommand="True" />
+		</i:EventTrigger>
 	</i:Interaction.Triggers>
 	<Window.Resources>
+		<converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
 	</Window.Resources>
 	<Grid>
 		<Grid.RowDefinitions>
@@ -35,8 +41,8 @@
 			<RowDefinition Height="*" />
 		</Grid.RowDefinitions>
 		<Grid.ColumnDefinitions>
-			<ColumnDefinition Width=".8*" />
-			<ColumnDefinition Width=".2*" />
+			<ColumnDefinition Width=".80*" />
+			<ColumnDefinition Width=".30*" />
 		</Grid.ColumnDefinitions>
 		<Border Grid.Column="0"
 				Grid.ColumnSpan="2"
@@ -44,51 +50,243 @@
 				Padding="10"
 				BorderThickness="0,0,0,2"
 				BorderBrush="{StaticResource BlackBrush}">
-			<toolPanel:ToolPanel x:Name="ToolPanel"
-								 IsDeleteVisible="{Binding IsShapeSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-								 ExportCommand="{Binding ExportCommand}"
-								 DeleteCommand="{Binding DeleteCommand}" />
-		</Border>
-		<controls:CustomCanvas Grid.Column="0"
-							   Grid.Row="1"
-							   x:Name="Workspace"
-							   ClipToBounds="True"
-							   IsShiftKeyPressed="{Binding IsShiftKeyPressed}"
-							   IsDrawing="{Binding IsDrawing}"
-							   Background="Transparent">
-			<i:Interaction.Behaviors>
-				<behaviors:DoubleClickToCommandBehavior Command="{Binding ShowEditToolCommand}" />
-			</i:Interaction.Behaviors>
+			<StackPanel Orientation="Horizontal">
+				<controls:ButtonWithImage PathImage="{StaticResource PointerIcon}"
+										  Style="{StaticResource ActivatedButtonWithImage}"
+										  Width="40"
+										  Height="40"
+										  Fill="{StaticResource BlackBrush}"
+										  IsActive="{Binding ToolData.IsSelectToolActive, Mode=TwoWay}"
+										  Margin="15 0" />
+				<!--
+				<controls:ButtonWithImage PathImage="{StaticResource CapturePointerIcon}"
+										  Style="{StaticResource ActivatedButtonWithImage}"
+										  Width="45"
+										  Height="45"
+										  Fill="{StaticResource BlackBrush}"
+										  Margin="15 0" />
+				-->
 
-			<i:Interaction.Triggers>
-				<i:EventTrigger EventName="PreviewMouseDown">
-					<i:InvokeCommandAction Command="{Binding CanvasPreviewMouseDownCommand}"
-										   PassEventArgsToCommand="True" />
-				</i:EventTrigger>
-				<i:EventTrigger EventName="PreviewMouseUp">
-					<i:InvokeCommandAction Command="{Binding CanvasPreviewMouseUpCommand}"
-										   PassEventArgsToCommand="True" />
-				</i:EventTrigger>
-				<i:EventTrigger EventName="PreviewMouseMove">
-					<i:InvokeCommandAction Command="{Binding CanvasPreviewMouseMoveCommand}"
-										   PassEventArgsToCommand="True" />
-				</i:EventTrigger>
-			</i:Interaction.Triggers>
-		</controls:CustomCanvas>
+				<controls:ButtonWithImage PathImage="{StaticResource FilledRectangleIcon}"
+										  Style="{StaticResource ActivatedButtonWithImage}"
+										  Width="45"
+										  Height="45"
+										  Fill="{StaticResource BlackBrush}"
+										  IsActive="{Binding ToolData.IsRectangleToolActive, Mode=TwoWay}"
+										  Margin="15 0" />
+
+				<controls:ButtonWithImage PathImage="{StaticResource PolygonIcon}"
+										  Style="{StaticResource ActivatedButtonWithImage}"
+										  Width="45"
+										  Height="45"
+										  Fill="{StaticResource BlackBrush}"
+										  IsActive="{Binding ToolData.IsPolylineToolActive, Mode=TwoWay}"
+										  Margin="15 0" />
+
+				<controls:ButtonWithImage PathImage="{StaticResource ExportIcon}"
+										  Style="{StaticResource RegularButtonWithImage}"
+										  Width="35"
+										  Height="35"
+										  Fill="{StaticResource BlackBrush}"
+										  Margin="15 0"
+										  Command="{Binding Path=ExportCommand}" />
+
+				<controls:ButtonWithImage PathImage="{StaticResource RecycleBinIcon}"
+										  Style="{StaticResource RegularButtonWithImage}"
+										  Width="35"
+										  Height="35"
+										  Fill="{StaticResource BlackBrush}"
+										  Margin="15 0"
+										  IsEnabled="{Binding Path=IsShapeSelected}"
+										  Command="{Binding Path=DeleteCommand}" />
+			</StackPanel>
+
+		</Border>
+		<ScrollViewer Grid.Column="0"
+					  Grid.Row="1"
+					  CanContentScroll="True"
+					  HorizontalScrollBarVisibility="Auto"
+					  VerticalScrollBarVisibility="Auto">
+			<!--
+			<controls:ScrollAndPan x:Name="zoomAndPanControl"
+			                       ContentOffsetX="{Binding Path=ContentOffsetX, Mode=TwoWay}"
+			                       ContentOffsetY="{Binding Path=ContentOffsetY, Mode=TwoWay}"
+			                       ContentViewportWidth="{Binding Path=ContentViewportWidth, Mode=OneWayToSource}"
+			                       ContentViewportHeight="{Binding Path=ContentViewportHeight, Mode=OneWayToSource}"
+			                       Background="LightGray"
+			                       MouseDown="zoomAndPanControl_MouseDown"
+			                       MouseUp="zoomAndPanControl_MouseUp"
+			                       MouseMove="zoomAndPanControl_MouseMove"
+			                       MouseWheel="zoomAndPanControl_MouseWheel"
+			                       IsMouseWheelScrollingEnabled="True"
+			                       CanHorizontallyScroll="True"
+			                       CanVerticallyScroll="True">
+				<Grid
+					x:Name="theGrid"
+					Width="{Binding Path=ContentWidth}"
+					Height="{Binding Path=ContentHeight}">
+					<Canvas
+						x:Name="content"
+						Background="White">
+						<Rectangle
+							Canvas.Left="50"
+							Canvas.Top="50"
+							Width="80"
+							Height="150"
+							Fill="Blue"
+							Cursor="Hand"
+							MouseDown="Rectangle_MouseDown"
+							MouseUp="Rectangle_MouseUp"
+							MouseMove="Rectangle_MouseMove" />
+						<Rectangle
+							Canvas.Left="550"
+							Canvas.Top="350"
+							Width="80"
+							Height="150"
+							Fill="Green"
+							Cursor="Hand"
+							MouseDown="Rectangle_MouseDown"
+							MouseUp="Rectangle_MouseUp"
+							MouseMove="Rectangle_MouseMove" />
+						<Rectangle
+							Canvas.Left="850"
+							Canvas.Top="850"
+							Width="30"
+							Height="20"
+							Fill="Purple"
+							Cursor="Hand"
+							MouseDown="Rectangle_MouseDown"
+							MouseUp="Rectangle_MouseUp"
+							MouseMove="Rectangle_MouseMove" />
+						<Rectangle
+							Canvas.Left="1850"
+							Canvas.Top="1850"
+							Width="80"
+							Height="150"
+							Fill="Red"
+							Cursor="Hand"
+							MouseDown="Rectangle_MouseDown"
+							MouseUp="Rectangle_MouseUp"
+							MouseMove="Rectangle_MouseMove"
+						/>
+					</Canvas>
+				</Grid>
+			</controls:ScrollAndPan>
+			-->
+			
+			<controls:CustomCanvas x:Name="Workspace"
+			                       ClipToBounds="True"
+			                       IsShiftKeyPressed="{Binding IsShiftKeyPressed}"
+			                       IsDrawing="{Binding IsDrawing}"
+			                       Background="Transparent"
+			                       VerticalAlignment="Stretch"
+			                       HorizontalAlignment="Stretch">
+				<i:Interaction.Behaviors>
+					<behaviors:DoubleClickToCommandBehavior Command="{Binding ShowEditToolCommand}" />
+				</i:Interaction.Behaviors>
+
+				<i:Interaction.Triggers>
+					<i:EventTrigger EventName="PreviewMouseDown">
+						<i:InvokeCommandAction Command="{Binding CanvasPreviewMouseDownCommand}"
+											   PassEventArgsToCommand="True" />
+					</i:EventTrigger>
+					<i:EventTrigger EventName="PreviewMouseUp">
+						<i:InvokeCommandAction Command="{Binding CanvasPreviewMouseUpCommand}"
+											   PassEventArgsToCommand="True" />
+					</i:EventTrigger>
+					<i:EventTrigger EventName="PreviewMouseMove">
+						<i:InvokeCommandAction Command="{Binding CanvasPreviewMouseMoveCommand}"
+											   PassEventArgsToCommand="True" />
+					</i:EventTrigger>
+				</i:Interaction.Triggers>
+			</controls:CustomCanvas>
+		</ScrollViewer>
 		<Border Grid.Column="1"
 				Grid.Row="1"
 				BorderThickness="2,0,0,0"
 				BorderBrush="{StaticResource BlackBrush}"
-				Padding="10">
-			<Button x:Name="ChangeColor"
-					Width="120"
-					VerticalAlignment="Top"
-					Height="35"
-					FontSize="14"
-					Background="Black"
-					Foreground="White"
-					Content="Изменить цвет"
-					Click="ChangeColor_OnClick" />
+				Padding="5">
+
+			<Grid VerticalAlignment="Top">
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto" />
+					<RowDefinition Height="Auto" />
+					<RowDefinition Height="Auto" />
+					<RowDefinition Height="Auto" />
+					<RowDefinition Height="Auto" />
+				</Grid.RowDefinitions>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="*" />
+				</Grid.ColumnDefinitions>
+				<TextBlock Grid.Row="0"
+						   Grid.Column="0"
+						   VerticalAlignment="Center"
+						   Text="Цвет границы" />
+				<colorPicker:ColorPicker Grid.Row="0"
+										 Grid.Column="1"
+										 VerticalAlignment="Center"
+										 Color="{Binding Path=ShapeProperties.BorderColor, Mode=TwoWay}" />
+
+				<TextBlock Grid.Row="1"
+						   Grid.Column="0"
+						   VerticalAlignment="Center"
+						   Text="Цвет заливки" />
+				<colorPicker:ColorPicker Grid.Row="1"
+										 Grid.Column="1"
+										 VerticalAlignment="Center"
+										 Color="{Binding Path=ShapeProperties.FillColor, Mode=TwoWay}" />
+
+				<StackPanel Grid.Row="2"
+							Grid.Column="0"
+							Grid.ColumnSpan="2"
+							Orientation="Horizontal"
+							Margin="0,10">
+					<TextBlock VerticalAlignment="Center"
+							   Text="Толщина границы"
+							   Margin="0,0,5,0" />
+					<controls:FilteredTextBox x:Name="ThicknessInputField"
+											  Style="{StaticResource TextBoxStyle}"
+											  MinimumDigit="0"
+											  MaximumDigit="500"
+											  Width="40"
+											  Text="{Binding ShapeProperties.Thickness, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+				</StackPanel>
+
+				<StackPanel Grid.Row="3"
+							Grid.Column="0"
+							Grid.ColumnSpan="2"
+							Orientation="Horizontal"
+							Margin="0,10"
+							Visibility="{Binding IsActiveWidthAndHeight, Converter={StaticResource BoolToVisibilityConverter}}">
+					<TextBlock VerticalAlignment="Center"
+							   Text="Ширина"
+							   Margin="0,0,5,0" />
+					<controls:FilteredTextBox x:Name="WidthInputField"
+											  Style="{StaticResource TextBoxStyle}"
+											  MinimumDigit="0"
+											  MaximumDigit="500"
+											  Width="100"
+											  Text="{Binding ShapeProperties.Width, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+				</StackPanel>
+
+				<StackPanel Grid.Row="4"
+							Grid.Column="0"
+							Grid.ColumnSpan="2"
+							Orientation="Horizontal"
+							Margin="0,10"
+							Visibility="{Binding IsActiveWidthAndHeight, Converter={StaticResource BoolToVisibilityConverter}}">
+					<TextBlock VerticalAlignment="Center"
+							   Text="Высота"
+							   Margin="0,0,10,0" />
+					<controls:FilteredTextBox x:Name="HeightInputField"
+											  Style="{StaticResource TextBoxStyle}"
+											  MinimumDigit="0"
+											  MaximumDigit="500"
+											  Width="100"
+											  Text="{Binding ShapeProperties.Height, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+				</StackPanel>
+			</Grid>
 		</Border>
 	</Grid>
 </Window>

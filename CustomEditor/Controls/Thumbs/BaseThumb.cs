@@ -2,14 +2,14 @@
 using System.Windows;
 using System.Windows.Controls.Primitives;
 
-namespace CustomEditor.Controls.Adorners
+namespace CustomEditor.Controls.Thumbs
 {
 	public class BaseThumb : Thumb
 	{
 		protected FrameworkElement ControlledItem;
-		public BaseThumb(FrameworkElement el) : base()
+		public BaseThumb(FrameworkElement adornedElement) : base()
 		{
-			ControlledItem = el ?? throw new ArgumentNullException();
+			ControlledItem = adornedElement ?? throw new ArgumentNullException();
 
 			DragDelta += new DragDeltaEventHandler(OnDragDelta);
 			DragStarted += new DragStartedEventHandler(OnDragStarted);

@@ -33,10 +33,16 @@ namespace CustomEditor.Controls.Adorners
 
 		protected override Size ArrangeOverride(Size arrangeBounds)
 		{
-			var finalRect = new Rect(arrangeBounds);
-			rectangleBaseChrome.Arrange(finalRect);
+			var selectedRectangle = DataContext as AdvancedRectangle ?? new AdvancedRectangle();
+			var thicknessParameter = selectedRectangle.StrokeThickness / 4.0d;
 
-			return arrangeBounds;
+			var calculatedRect = new Rect(arrangeBounds);
+			var newRect = new Rect(calculatedRect.X - thicknessParameter, calculatedRect.Y - thicknessParameter, calculatedRect.Width, calculatedRect.Height);
+
+			var calculatedSize = new Size(newRect.Width, newRect.Height);
+			rectangleBaseChrome.Arrange(newRect);
+
+			return calculatedSize;
 		}
 
 		protected override int VisualChildrenCount => Visuals.Count;

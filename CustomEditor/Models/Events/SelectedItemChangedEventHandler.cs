@@ -5,5 +5,5 @@ namespace CustomEditor.Models.Events
 {
 	[ComVisible(true)]
 	[Serializable]
-	public delegate void SelectedItemChangedEventHandler(object sender, SelectedItemChangedEventArgs e);
+	public delegate void SelectedItemChangedEventHandler(object sender, SelectedItemChangedEventArgs eventArgs);
 }

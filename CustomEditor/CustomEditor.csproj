@@ -14,6 +14,8 @@
     <WarningLevel>4</WarningLevel>
     <Deterministic>true</Deterministic>
     <TargetFrameworkProfile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -66,6 +68,14 @@
     <Compile Include="Controls\AdornerChrome\RectangleChrome.xaml.cs">
       <DependentUpon>RectangleChrome.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\AdvancedPolyline.cs" />
+    <Compile Include="Controls\ColorPicker\ColorManipulation\HsbConverter.cs" />
+    <Compile Include="Controls\ColorPicker\ColorPicker.cs" />
+    <Compile Include="Controls\ColorPicker\ColorManipulation\Hsb.cs" />
+    <Compile Include="Controls\FilteredTextBox.cs" />
+    <Compile Include="Controls\MouseHandlingMode.cs" />
+    <Compile Include="Controls\ScrollAndPan.cs" />
+    <Compile Include="Controls\ScrollMode.cs" />
     <Compile Include="Controls\Thumbs\BaseThumb.cs" />
     <Compile Include="Controls\Thumbs\PointDragThumb.cs" />
     <Compile Include="Controls\Adorners\PolylineAdorner.cs" />
@@ -77,24 +87,30 @@
     </Compile>
     <Compile Include="Controls\ButtonWithImage.cs" />
     <Compile Include="Controls\CustomCanvas.cs" />
-    <Compile Include="Controls\PartiallyRoundedRectangle.cs" />
+    <Compile Include="Controls\AdvancedRectangle.cs" />
     <Compile Include="Controls\Thumbs\MoveThumb.cs" />
     <Compile Include="Controls\Thumbs\ResizeThumb.cs" />
-    <Compile Include="Controls\ToolPanel\ToolPanel.xaml.cs">
-      <DependentUpon>ToolPanel.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Controls\ToolPanel\ToolPanelVm.cs" />
+    <Compile Include="Gestures\Zoom.cs" />
+    <Compile Include="ViewModels\ToolPanelVm.cs" />
     <Compile Include="Converters\BoolToBrushConverter.cs" />
     <Compile Include="Converters\BoolToThicknessConverter.cs" />
+    <Compile Include="Converters\BoolToVisibilityConverter.cs" />
+    <Compile Include="Converters\ColorToSolidBrushColorConverter.cs" />
     <Compile Include="Converters\DoubleFormatConverter.cs" />
+    <Compile Include="Converters\HsbToColorConverter.cs" />
+    <Compile Include="Converters\PointToStringConverter.cs" />
     <Compile Include="Converters\StringNullOrEmptyToVisibilityConverter.cs" />
+    <Compile Include="Converters\StringToFloatConverter.cs" />
     <Compile Include="Helpers\EditorHelper.cs" />
+    <Compile Include="Helpers\VisualHelper.cs" />
     <Compile Include="Models\Action.cs" />
     <Compile Include="Models\ActionType.cs" />
     <Compile Include="Models\Events\PositionChangedEventArgs.cs" />
     <Compile Include="Models\Events\SelectedItemChangedEventArgs.cs" />
     <Compile Include="Models\Events\SelectedItemChangedEventHandler.cs" />
     <Compile Include="Models\ToolType.cs" />
+    <Compile Include="Services\DialogService.cs" />
+    <Compile Include="Services\FileService.cs" />
     <Compile Include="ViewModels\Base\BaseViewModel.cs" />
     <Compile Include="ViewModels\MainWindowViewModel.cs" />
     <Page Include="Controls\AdornerChrome\RectangleChrome.xaml">
@@ -105,7 +121,19 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Controls\ToolPanel\ToolPanel.xaml">
+    <Page Include="Styles\Constants.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Styles\Controls.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Styles\Sliders.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Styles\TextBox.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -125,6 +153,7 @@
     <Compile Include="Commands\RelayCommand.cs" />
     <Compile Include="Helpers\AncestorHelper.cs" />
     <Compile Include="Helpers\Invoking.cs" />
+    <Compile Include="ViewModels\VisualProperties.cs" />
     <Compile Include="Views\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>

@@ -5,7 +5,7 @@ using System.Windows.Media;
 
 namespace CustomEditor.Helpers
 {
-	public static class AncestorHelper
+	internal static class AncestorHelper
 	{
 		public static T FindAncestor<T>(this DependencyObject current)
 			where T : DependencyObject

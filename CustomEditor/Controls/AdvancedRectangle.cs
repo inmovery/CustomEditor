@@ -4,12 +4,12 @@ using System.Windows.Shapes;
 
 namespace CustomEditor.Controls
 {
-	public class PartiallyRoundedRectangle : Shape
+	public class AdvancedRectangle : Shape
 	{
 		public static readonly DependencyProperty RadiusXProperty = DependencyProperty.Register(
 			nameof(RadiusX),
 			typeof(int),
-			typeof(PartiallyRoundedRectangle),
+			typeof(AdvancedRectangle),
 			new PropertyMetadata(0));
 
 		public int RadiusX
@@ -21,7 +21,7 @@ namespace CustomEditor.Controls
 		public static readonly DependencyProperty RadiusYProperty = DependencyProperty.Register(
 			nameof(RadiusY),
 			typeof(int),
-			typeof(PartiallyRoundedRectangle),
+			typeof(AdvancedRectangle),
 			new PropertyMetadata(0));
 
 		public int RadiusY
@@ -33,7 +33,7 @@ namespace CustomEditor.Controls
 		public static readonly DependencyProperty RoundTopLeftProperty = DependencyProperty.Register(
 			nameof(RoundTopLeft),
 			typeof(bool),
-			typeof(PartiallyRoundedRectangle),
+			typeof(AdvancedRectangle),
 			new PropertyMetadata(false));
 
 		public bool RoundTopLeft
@@ -45,7 +45,7 @@ namespace CustomEditor.Controls
 		public static readonly DependencyProperty RoundTopRightProperty = DependencyProperty.Register(
 			nameof(RoundTopRight),
 			typeof(bool),
-			typeof(PartiallyRoundedRectangle),
+			typeof(AdvancedRectangle),
 			new PropertyMetadata(false));
 
 		public bool RoundTopRight
@@ -57,7 +57,7 @@ namespace CustomEditor.Controls
 		public static readonly DependencyProperty RoundBottomLeftProperty = DependencyProperty.Register(
 			nameof(RoundBottomLeft),
 			typeof(bool),
-			typeof(PartiallyRoundedRectangle),
+			typeof(AdvancedRectangle),
 			new PropertyMetadata(false));
 
 		public bool RoundBottomLeft
@@ -69,7 +69,7 @@ namespace CustomEditor.Controls
 		public static readonly DependencyProperty RoundBottomRightProperty = DependencyProperty.Register(
 			nameof(RoundBottomRight),
 			typeof(bool),
-			typeof(PartiallyRoundedRectangle),
+			typeof(AdvancedRectangle),
 			new PropertyMetadata(false));
 
 		public bool RoundBottomRight

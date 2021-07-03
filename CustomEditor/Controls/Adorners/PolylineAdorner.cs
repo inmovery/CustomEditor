@@ -1,26 +1,24 @@
-﻿using System;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Shapes;
-using CustomEditor.Helpers;
+using CustomEditor.Controls.Thumbs;
 
 namespace CustomEditor.Controls.Adorners
 {
 	public class PolylineAdorner : Adorner
 	{
 		protected VisualCollection VisualChildren;
-		private readonly Polyline _adornedPolyline;
+		private readonly AdvancedPolyline _adornedPolyline;
 
 		public PolylineAdorner(UIElement adornedElement) : base(adornedElement)
 		{
 			VisualChildren = new VisualCollection(this);
 
-			_adornedPolyline = AdornedElement as Polyline;
+			_adornedPolyline = AdornedElement as AdvancedPolyline;
 
 			if (_adornedPolyline == null)
 				return;
@@ -53,7 +51,7 @@ namespace CustomEditor.Controls.Adorners
 
 		public void PointDragStarted(object sender, DragStartedEventArgs e)
 		{
-			// todo: добавить сохранение в состояние в буфер (пример: RaiseObjectChanged(new ModifyGraphicsObject(AdornedElement)))
+			// todo: добавить сохранение состояния в буфер (пример: RaiseObjectChanged(new ModifyGraphicsObject(AdornedElement)))
 		}
 
 		public void PointDragDelta(object sender, DragDeltaEventArgs e)
@@ -129,14 +127,6 @@ namespace CustomEditor.Controls.Adorners
 
 		public override GeneralTransform GetDesiredTransform(GeneralTransform transform)
 		{
-			/*
-			var matrix = new Matrix
-			{
-				OffsetX = ((MatrixTransform) transform).Matrix.OffsetX,
-				OffsetY = ((MatrixTransform) transform).Matrix.OffsetY
-			};
-			*/
-
 			return new MatrixTransform();
 		}
 	}

@@ -1,0 +1,73 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+	<Style x:Key="TextBoxStyle"
+		   TargetType="TextBox">
+		<Setter Property="FontSize"
+				Value="{StaticResource RegularFontSize}" />
+		<Setter Property="SnapsToDevicePixels"
+				Value="True" />
+		<Setter Property="FontFamily"
+				Value="{StaticResource RegularFontFamily}" />
+		<Setter Property="Background"
+				Value="White" />
+		<Setter Property="SelectionBrush"
+				Value="{StaticResource LightGrayBrush}" />
+		<Setter Property="Foreground"
+				Value="{StaticResource DarkGrayBrush}" />
+		<Setter Property="Height"
+				Value="{StaticResource RegularHeight}" />
+		<Setter Property="BorderBrush"
+				Value="{StaticResource LightGrayBrush}" />
+		<Setter Property="BorderThickness"
+				Value="1" />
+		<Setter Property="CaretBrush"
+				Value="{StaticResource DarkGrayBrush}" />
+		<Setter Property="VerticalAlignment"
+				Value="Center" />
+		<Setter Property="HorizontalAlignment"
+				Value="Stretch" />
+		<Setter Property="VerticalContentAlignment"
+				Value="Center" />
+		<Setter Property="Padding"
+				Value="3" />
+		<Setter Property="Template">
+			<Setter.Value>
+				<ControlTemplate TargetType="TextBox">
+					<Border BorderThickness="{TemplateBinding BorderThickness}"
+							Height="{TemplateBinding Height}"
+							HorizontalAlignment="Stretch"
+							BorderBrush="{TemplateBinding BorderBrush}"
+							CornerRadius="{StaticResource CornerRadius}"
+							Background="{TemplateBinding Background}">
+						<ScrollViewer Margin="{TemplateBinding Padding}"
+									  VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+									  TextElement.Foreground="{TemplateBinding Foreground}"
+									  x:Name="PART_ContentHost" />
+					</Border>
+					<ControlTemplate.Triggers>
+						<Trigger Property="IsEnabled"
+								 Value="False">
+							<Setter Value="{StaticResource DisabledOpacity}"
+									Property="Opacity" />
+						</Trigger>
+						<Trigger Property="AcceptsTab"
+								 Value="True">
+							<Setter TargetName="PART_ContentHost"
+									Property="VerticalAlignment"
+									Value="Stretch" />
+						</Trigger>
+					</ControlTemplate.Triggers>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+		<Style.Triggers>
+			<Trigger Property="IsFocused"
+					 Value="True">
+				<Setter Property="BorderBrush"
+						Value="{DynamicResource ButtonBorderBrush}" />
+				<Setter Property="BorderThickness"
+						Value="1" />
+			</Trigger>
+		</Style.Triggers>
+	</Style>
+</ResourceDictionary>

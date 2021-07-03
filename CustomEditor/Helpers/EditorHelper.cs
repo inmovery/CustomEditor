@@ -1,13 +1,14 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Media;
-using System.Windows.Shapes;
+using CustomEditor.Controls;
 
 namespace CustomEditor.Helpers
 {
-	public static class EditorHelper
+	internal static class EditorHelper
 	{
-		public static void UpdatePolylineLayoutProperties(ref Polyline polyline)
+		public static void UpdatePolylineLayoutProperties(ref AdvancedPolyline polyline)
 		{
 			var pointsCollection = polyline.Points.Clone();
 			var bounds = new Rect
@@ -58,6 +59,11 @@ namespace CustomEditor.Helpers
 			polyline.Height = bounds.Height + polylineThickness;
 			polyline.Fill = Brushes.Transparent;
 			polyline.Stretch = Stretch.Fill;
+		}
+
+		public static Rect BoundsRelativeTo(this FrameworkElement element, Visual relativeTo)
+		{
+			return element.TransformToVisual(relativeTo).TransformBounds(LayoutInformation.GetLayoutSlot(element));
 		}
 	}
 }

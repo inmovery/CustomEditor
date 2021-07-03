@@ -7,4 +7,16 @@
 	<Color x:Key="BlackColor">#000000</Color>
 	<SolidColorBrush x:Key="BlackBrush"
 					 Color="{StaticResource BlackColor}" />
+
+	<Color x:Key="DarkGrayColor">#4a4a4d</Color>
+	<SolidColorBrush x:Key="DarkGrayBrush"
+					  Color="{StaticResource DarkGrayColor}" />
+
+	<Color x:Key="LightGrayColor">#7c7c80</Color>
+	<SolidColorBrush x:Key="LightGrayBrush"
+					 Color="{StaticResource LightGrayColor}" />
+
+	<Color x:Key="DisabledColor">#FF647076</Color>
+	<SolidColorBrush x:Key="DisabledBrush"
+					 Color="{StaticResource DisabledColor}" />
 </ResourceDictionary>
