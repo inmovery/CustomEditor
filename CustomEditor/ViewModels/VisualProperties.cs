@@ -9,7 +9,7 @@ namespace CustomEditor.ViewModels
 	{
 		private Color? _fillColor;
 		private Color _borderColor;
-		private int _thickness;
+		private double _thickness;
 		private double _width;
 		private double _height;
 
@@ -17,7 +17,7 @@ namespace CustomEditor.ViewModels
 		{
 			_fillColor = Colors.Black;
 			_borderColor = Colors.Black;
-			_thickness = 0;
+			_thickness = 0.0d;
 			_width = 0.0d;
 			_height = 0.0d;
 		}
@@ -50,7 +50,7 @@ namespace CustomEditor.ViewModels
 			}
 		}
 
-		public int Thickness
+		public double Thickness
 		{
 			get => _thickness;
 			set

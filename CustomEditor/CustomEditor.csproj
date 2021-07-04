@@ -91,6 +91,7 @@
     <Compile Include="Controls\Thumbs\MoveThumb.cs" />
     <Compile Include="Controls\Thumbs\ResizeThumb.cs" />
     <Compile Include="Gestures\Zoom.cs" />
+    <Compile Include="Models\EventBroker.cs" />
     <Compile Include="ViewModels\ToolPanelVm.cs" />
     <Compile Include="Converters\BoolToBrushConverter.cs" />
     <Compile Include="Converters\BoolToThicknessConverter.cs" />

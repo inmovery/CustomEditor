@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
-using CustomEditor.Gestures;
 
 namespace CustomEditor.Controls
 {
@@ -17,8 +12,6 @@ namespace CustomEditor.Controls
 	/// </summary>
 	public class ScrollMode : Grid, IScrollInfo
 	{
-		#region Private Fields
-
 		private TranslateTransform _translateTransform;
 		private Vector _offset;
 		private Size _extent;
@@ -29,18 +22,13 @@ namespace CustomEditor.Controls
 		private Point _viewportBottomRightInitial;
 		private Point _viewportTopLeftInitial;
 
-		private double HighestElement => _parent.TopLimit; // _parent.IsDrawing ? _parent.TopLimit : _parent.ItemsHost.TopLimit;
+		private double HighestElement => 0.0d; // _parent?.TopLimit ?? 0.0d;
 
-		private double LowestElement => _parent.BottomLimit; // _parent.IsDrawing ? _parent.BottomLimit : _parent.ItemsHost.BottomLimit;
+		private double LowestElement => 0.0d; // _parent?.BottomLimit ?? 0.0d;
 
-		private double MostLeftElement => _parent.LeftLimit; // _parent.IsDrawing ? _parent.LeftLimit : _parent.ItemsHost.LeftLimit;
+		private double MostLeftElement => 0.0d; // _parent?.LeftLimit ?? 0.0d;
 
-		private double MostRightElement => _parent.RightLimit; // _parent.IsDrawing ? _parent.RightLimit : _parent.ItemsHost.RightLimit;
-
-
-		#endregion
-
-		#region Internal Properties
+		private double MostRightElement => 0.0d; // _parent?.RightLimit ?? 0.0d;
 
 		/// <summary>
 		/// Positive Vertical offset of <see cref="ScrollOwner"/>
@@ -82,13 +70,9 @@ namespace CustomEditor.Controls
 		/// </summary>
 		protected double RightLimit => TranslatePoint(_viewportBottomRightInitial, _parent).X;
 
-		internal bool TranslatedVertically { get; private set; }
+		public bool TranslatedVertically { get; private set; }
 
-		internal bool TranslatedHorizontally { get; private set; }
-
-		#endregion
-
-		#region IScrollInfo
+		public bool TranslatedHorizontally { get; private set; }
 
 		/// <summary>
 		/// <see cref="IScrollInfo"/> member
@@ -118,11 +102,7 @@ namespace CustomEditor.Controls
 		/// <summary>
 		/// <see cref="IScrollInfo"/> member
 		/// </summary>
-		public ScrollViewer ScrollOwner
-		{
-			get;
-			set;
-		}
+		public ScrollViewer ScrollOwner { get; set; }
 
 		/// <summary>
 		/// <see cref="IScrollInfo"/> member
@@ -178,25 +158,6 @@ namespace CustomEditor.Controls
 
 		public Rect MakeVisible(Visual visual, Rect rectangle)
 		{
-			/*
-			var viewportRect = new Rect(LeftLimit, TopLimit, ViewportWidth, ViewportHeight);
-            if (visual is )
-            {
-                var containerRect = new Rect(container.Left, container.Top, container.Width, container.Height);
-                if (!viewportRect.Contains(containerRect))
-                {
-                    var viewportXCenter = (viewportRect.Left + viewportRect.Right) / 2;
-                    var viewportYCenter = (viewportRect.Top + viewportRect.Bottom) / 2;
-
-                    ScrollHorizontally((container.Left - viewportXCenter) + container.Width / 2);
-                    ScrollVertically((container.Top - viewportYCenter) + container.Height / 2);
-                    AdjustScrollHorizontally();
-                    AdjustScrollVertically();
-                }
-                return new Rect(ScrollOwner.RenderSize);
-            }
-			*/
-
 			return new Rect(ScrollOwner.RenderSize);
 		}
 
@@ -284,18 +245,13 @@ namespace CustomEditor.Controls
 					if (offset > _offset.X)
 					{
 						if (LeftLimit < MostLeftElement)
-						{
 							ScrollHorizontally(1);
-						}
 						else
-						{
 							ScrollHorizontally(offset - _offset.X);
-						}
 					}
 					else
-					{
 						ScrollHorizontally(offset - _offset.X);
-					}
+
 					_offset.X = offset;
 				}
 			}
@@ -306,9 +262,7 @@ namespace CustomEditor.Controls
 			}
 
 			if (_offset.X == 0 && LeftLimit < MostLeftElement && RightLimit > MostRightElement)
-			{
 				_extent.Width = _viewport.Width;
-			}
 
 			TranslatedHorizontally = false;
 		}
@@ -322,22 +276,18 @@ namespace CustomEditor.Controls
 			{
 				if (offset != _offset.Y)
 				{
-					Console.WriteLine(offset);
+					// todo: придумать другой способ дебагинга (ex. через логирование)
+					// Console.WriteLine(offset);
 					if (offset > _offset.Y)
 					{
 						if (TopLimit < HighestElement)
-						{
 							ScrollVertically(1);
-						}
 						else
-						{
 							ScrollVertically(offset - _offset.Y);
-						}
 					}
 					else
-					{
 						ScrollVertically(offset - _offset.Y);
-					}
+
 					_offset.Y = offset;
 				}
 			}
@@ -348,16 +298,10 @@ namespace CustomEditor.Controls
 			}
 
 			if (_offset.Y == 0 && TopLimit < HighestElement && BottomLimit > LowestElement)
-			{
 				_extent.Height = _viewport.Height;
-			}
 
 			TranslatedVertically = false;
 		}
-
-		#endregion
-
-		#region Override Methods
 
 		protected override void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e)
 		{
@@ -370,102 +314,82 @@ namespace CustomEditor.Controls
 
 		protected override void OnPreviewMouseMove(MouseEventArgs e)
 		{
+			if (Mouse.LeftButton != MouseButtonState.Pressed)
+				return;
 
-			if (Mouse.LeftButton == MouseButtonState.Pressed)
-			{
-				var currentPosition = e.GetPosition(this);
-				var deltaHeight = currentPosition.Y - _panInitialPosition.Y;
-				var deltaWidth = currentPosition.X - _panInitialPosition.X;
+			var currentPosition = e.GetPosition(this);
+			var deltaHeight = currentPosition.Y - _panInitialPosition.Y;
+			var deltaWidth = currentPosition.X - _panInitialPosition.X;
 
-				if (deltaWidth != 0)
-				{
-					PanHorizontally(-deltaWidth);
-				}
+			if (deltaWidth != 0)
+				PanHorizontally(-deltaWidth);
 
-				if (deltaHeight != 0)
-				{
-					PanVertically(-deltaHeight);
-				}
-				ScrollOwner.InvalidateScrollInfo();
-				_panInitialPosition = currentPosition;
-			}
+			if (deltaHeight != 0)
+				PanVertically(-deltaHeight);
+
+			ScrollOwner.InvalidateScrollInfo();
+			_panInitialPosition = currentPosition;
 		}
 		protected override void OnMouseUp(MouseButtonEventArgs e)
 		{
 			if (IsMouseCaptured)
-			{
 				ReleaseMouseCapture();
-			}
 		}
 		protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
 		{
-			/*
-            if (_parent.IsZooming && !_parent.DisableZoom)
-            {
-                var position = e.GetPosition(this);
-                Zoom(position, e.Delta);
-            }
-            */
+			// @ todo: придумать как аккуратно сделать зум с Shift (по горизонтали)
 		}
 
 		protected override Size MeasureOverride(Size constraint)
 		{
-			if (ScrollOwner != null)
+			if (ScrollOwner == null)
+				return base.MeasureOverride(constraint);
+
+			if (_viewport != constraint)
 			{
-				if (_viewport != constraint)
-				{
-					_viewportTopLeftInitial = new Point(0, 0);
-					_viewport = constraint;
-					_viewportBottomRightInitial = new Point(_viewport.Width, _viewport.Height);
-					_initialExtent = _viewport;
+				_viewportTopLeftInitial = new Point(0, 0);
+				_viewport = constraint;
+				_viewportBottomRightInitial = new Point(_viewport.Width, _viewport.Height);
+				_initialExtent = _viewport;
 
-					if (TopLimit < HighestElement && BottomLimit > LowestElement)
-					{
-						_extent.Height = _viewport.Height;
-					}
-					if (LeftLimit < MostLeftElement && RightLimit > MostRightElement)
-					{
-						_extent.Width = _viewport.Width;
-					}
+				if (TopLimit < HighestElement && BottomLimit > LowestElement)
+					_extent.Height = _viewport.Height;
 
-					AdjustScrollVertically();
-					AdjustScrollHorizontally();
-				}
-				ScrollOwner.InvalidateScrollInfo();
+				if (LeftLimit < MostLeftElement && RightLimit > MostRightElement)
+					_extent.Width = _viewport.Width;
+
+				AdjustScrollVertically();
+				AdjustScrollHorizontally();
 			}
+			ScrollOwner.InvalidateScrollInfo();
+
 			return base.MeasureOverride(constraint);
 		}
 		protected override Size ArrangeOverride(Size arrangeSize)
 		{
-			if (ScrollOwner != null)
+			if (ScrollOwner == null)
+				return base.ArrangeOverride(arrangeSize);
+
+			if (_viewport != arrangeSize)
 			{
-				if (_viewport != arrangeSize)
-				{
-					_viewportTopLeftInitial = new Point(0, 0);
-					_viewport = arrangeSize;
-					_viewportBottomRightInitial = new Point(_viewport.Width, _viewport.Height);
-					_initialExtent = _viewport;
+				_viewportTopLeftInitial = new Point(0, 0);
+				_viewport = arrangeSize;
+				_viewportBottomRightInitial = new Point(_viewport.Width, _viewport.Height);
+				_initialExtent = _viewport;
 
-					if (TopLimit > HighestElement && BottomLimit > LowestElement)
-					{
-						_extent.Height = _viewport.Height;
-					}
-					if (LeftLimit < MostLeftElement && RightLimit > MostRightElement)
-					{
-						_extent.Width = _viewport.Width;
-					}
+				if (TopLimit > HighestElement && BottomLimit > LowestElement)
+					_extent.Height = _viewport.Height;
 
-					AdjustScrollVertically();
-					AdjustScrollHorizontally();
-				}
-				ScrollOwner.InvalidateScrollInfo();
+				if (LeftLimit < MostLeftElement && RightLimit > MostRightElement)
+					_extent.Width = _viewport.Width;
+
+				AdjustScrollVertically();
+				AdjustScrollHorizontally();
 			}
+			ScrollOwner.InvalidateScrollInfo();
+
 			return base.ArrangeOverride(arrangeSize);
 		}
-
-		#endregion
-
-		#region Internal Methods
 
 		internal void AdjustScrollVertically()
 		{
@@ -494,22 +418,18 @@ namespace CustomEditor.Controls
 		{
 			TranslatedVertically = false;
 			if (reverseScroll)
-			{
 				ScrollVertically(-offset);
-			}
 			else
-			{
 				ScrollVertically(offset);
-			}
+
 			if (TopLimit > HighestElement || BottomLimit < LowestElement)
 			{
 				SetVerticalOffset(VerticalOffset + offset);
 				UpdateExtentHeight();
 			}
 			else
-			{
 				SetVerticalOffset(0);
-			}
+
 			ScrollOwner.InvalidateScrollInfo();
 		}
 
@@ -522,53 +442,39 @@ namespace CustomEditor.Controls
 		{
 			TranslatedHorizontally = false;
 			if (reverseScroll)
-			{
 				ScrollHorizontally(-offset);
-			}
 			else
-			{
 				ScrollHorizontally(offset);
-			}
+
 			if (LeftLimit > MostLeftElement || RightLimit < MostRightElement)
 			{
 				SetHorizontalOffset(offset);
 				UpdateExtentWidth();
 			}
 			else
-			{
 				SetHorizontalOffset(0);
-			}
+
 			ScrollOwner.InvalidateScrollInfo();
 		}
 
-		internal void Initalize(CustomCanvas canvas)
+		public void Initialize(CustomCanvas canvas)
 		{
 			_parent = canvas;
-			_translateTransform = _parent.TranslateTransform;
+			// _translateTransform = _parent.TranslateTransform;
 		}
-
-		#endregion
-
-		#region Private Methods
 
 		private double CoerceVerticalOffset(double offset)
 		{
 			if (double.IsNaN(offset) || double.IsInfinity(offset))
-			{
 				offset = 0;
-			}
+
 			if (TopLimit > HighestElement)
-			{
 				offset = TopOffset;
-			}
 			else if (offset > 0)
-			{
 				offset = Math.Min(_offset.Y + offset, BottomOffset);
-			}
+
 			if (TopLimit < HighestElement && BottomLimit > LowestElement)
-			{
 				offset = 0;
-			}
 
 			return offset;
 		}
@@ -576,21 +482,15 @@ namespace CustomEditor.Controls
 		private double CoerceHorizontalOffset(double offset)
 		{
 			if (double.IsNaN(offset) || double.IsInfinity(offset))
-			{
 				offset = 0;
-			}
+
 			if (LeftLimit > MostLeftElement)
-			{
 				offset = LeftOffset;
-			}
 			else if (offset > 0)
-			{
 				offset = Math.Min(_offset.X + offset, RightOffset);
-			}
+
 			if (LeftLimit < MostLeftElement && RightLimit > MostRightElement)
-			{
 				offset = 0;
-			}
 
 			return offset;
 		}
@@ -598,17 +498,11 @@ namespace CustomEditor.Controls
 		private void UpdateExtentWidth()
 		{
 			if (LeftLimit > MostLeftElement && RightLimit > MostRightElement)
-			{
 				_extent.Width = _initialExtent.Width + Math.Abs(LeftOffset);
-			}
 			else if (RightLimit < MostRightElement && LeftLimit < MostLeftElement)
-			{
 				_extent.Width = _initialExtent.Width + Math.Abs(RightOffset);
-			}
 			else if (LeftLimit > MostLeftElement && RightLimit < MostRightElement)
-			{
 				_extent.Width = _initialExtent.Width + LeftOffset + Math.Abs(RightOffset);
-			}
 		}
 		private void ScrollVertically(double offset)
 		{
@@ -625,20 +519,11 @@ namespace CustomEditor.Controls
 		private void UpdateExtentHeight()
 		{
 			if (TopLimit > HighestElement && BottomLimit > LowestElement)
-			{
 				_extent.Height = _initialExtent.Height + Math.Abs(TopOffset);
-			}
 			else if (BottomLimit < LowestElement && TopLimit < HighestElement)
-			{
 				_extent.Height = _initialExtent.Height + Math.Abs(BottomOffset);
-			}
 			else if (TopLimit > HighestElement && BottomLimit < LowestElement)
-			{
 				_extent.Height = _initialExtent.Height + TopOffset + Math.Abs(BottomOffset);
-			}
 		}
-
-		#endregion
-
 	}
 }

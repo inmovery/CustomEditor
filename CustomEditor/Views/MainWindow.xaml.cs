@@ -1,13 +1,4 @@
-﻿using System;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Shapes;
-using CustomEditor.Controls;
-using CustomEditor.Helpers;
-using CustomEditor.ViewModels;
+﻿using System.Windows;
 
 namespace CustomEditor.Views
 {
@@ -27,7 +18,7 @@ namespace CustomEditor.Views
 		/// <summary>
 		/// The point that was clicked relative to the ZoomAndPanControl.
 		/// </summary>
-		private Point origZoomAndPanControlMouseDownPoint;
+		private Point origScrollAndPanControlMouseDownPoint;
 
 		/// <summary>
 		/// The point that was clicked relative to the content that is contained within the ZoomAndPanControl.
@@ -110,13 +101,13 @@ namespace CustomEditor.Views
 		/// <summary>
 		/// Event raised on mouse down in the ZoomAndPanControl.
 		/// </summary>
-		private void zoomAndPanControl_MouseDown(object sender, MouseButtonEventArgs e)
+		private void scrollAndPanControl_MouseDown(object sender, MouseButtonEventArgs e)
 		{
 			Workspace.Focus();
 			Keyboard.Focus(Workspace);
 
 			mouseButtonDown = e.ChangedButton;
-			origZoomAndPanControlMouseDownPoint = e.GetPosition(zoomAndPanControl);
+			origScrollAndPanControlMouseDownPoint = e.GetPosition(scrollAndPanControl);
 			origContentMouseDownPoint = e.GetPosition(Workspace);
 
 			mouseHandlingMode = MouseHandlingMode.Panning;
@@ -124,7 +115,7 @@ namespace CustomEditor.Views
 			if (mouseHandlingMode != MouseHandlingMode.None)
 			{
 				// Capture the mouse so that we eventually receive the mouse up event.
-				zoomAndPanControl.CaptureMouse();
+				scrollAndPanControl.CaptureMouse();
 				e.Handled = true;
 			}
 		}
@@ -133,11 +124,11 @@ namespace CustomEditor.Views
 		/// <summary>
 		/// Event raised on mouse up in the ZoomAndPanControl.
 		/// </summary>
-		private void zoomAndPanControl_MouseUp(object sender, MouseButtonEventArgs e)
+		private void scrollAndPanControl_MouseUp(object sender, MouseButtonEventArgs e)
 		{
 			if (mouseHandlingMode != MouseHandlingMode.None)
 			{
-				zoomAndPanControl.ReleaseMouseCapture();
+				scrollAndPanControl.ReleaseMouseCapture();
 				mouseHandlingMode = MouseHandlingMode.None;
 				e.Handled = true;
 			}
@@ -146,15 +137,15 @@ namespace CustomEditor.Views
 		/// <summary>
 		/// Event raised on mouse move in the ZoomAndPanControl.
 		/// </summary>
-		private void zoomAndPanControl_MouseMove(object sender, MouseEventArgs e)
+		private void scrollAndPanControl_MouseMove(object sender, MouseEventArgs e)
 		{
 			if (mouseHandlingMode == MouseHandlingMode.Panning)
 			{
 				Point curContentMousePoint = e.GetPosition(Workspace);
 				Vector dragOffset = curContentMousePoint - origContentMouseDownPoint;
 
-				zoomAndPanControl.ContentOffsetX -= dragOffset.X;
-				zoomAndPanControl.ContentOffsetY -= dragOffset.Y;
+				scrollAndPanControl.ContentOffsetX -= dragOffset.X;
+				scrollAndPanControl.ContentOffsetY -= dragOffset.Y;
 
 				e.Handled = true;
 			}
@@ -163,19 +154,19 @@ namespace CustomEditor.Views
 		/// <summary>
 		/// Event raised by rotating the mouse wheel
 		/// </summary>
-		private void zoomAndPanControl_MouseWheel(object sender, MouseWheelEventArgs e)
+		private void scrollAndPanControl_MouseWheel(object sender, MouseWheelEventArgs e)
 		{
 			e.Handled = true;
 
 			if (e.Delta > 0)
 			{
 				Point curContentMousePoint = e.GetPosition(Workspace);
-				zoomAndPanControl.LineLeft();
+				scrollAndPanControl.LineLeft();
 			}
 			else if (e.Delta < 0)
 			{
 				Point curContentMousePoint = e.GetPosition(Workspace);
-				zoomAndPanControl.LineRight();
+				scrollAndPanControl.LineRight();
 			}
 		}
 
@@ -187,26 +178,19 @@ namespace CustomEditor.Views
 			Workspace.Focus();
 			Keyboard.Focus(Workspace);
 
+			// When the shift key is held down special zooming logic is executed in content_MouseDown,
+			// so don't handle mouse input here.
 			if ((Keyboard.Modifiers & ModifierKeys.Shift) != 0)
-			{
-				//
-				// When the shift key is held down special zooming logic is executed in content_MouseDown,
-				// so don't handle mouse input here.
-				//
 				return;
-			}
 
+			// We are in some other mouse handling mode, don't do anything.
 			if (mouseHandlingMode != MouseHandlingMode.None)
-			{
-				//
-				// We are in some other mouse handling mode, don't do anything.
 				return;
-			}
 
 			mouseHandlingMode = MouseHandlingMode.DraggingRectangles;
 			origContentMouseDownPoint = e.GetPosition(Workspace);
 
-			Rectangle rectangle = (Rectangle)sender;
+			var rectangle = (Rectangle)sender;
 			rectangle.CaptureMouse();
 
 			e.Handled = true;
@@ -217,17 +201,13 @@ namespace CustomEditor.Views
 		/// </summary>
 		private void Rectangle_MouseUp(object sender, MouseButtonEventArgs e)
 		{
+			// We are not in rectangle dragging mode.
 			if (mouseHandlingMode != MouseHandlingMode.DraggingRectangles)
-			{
-				//
-				// We are not in rectangle dragging mode.
-				//
 				return;
-			}
 
 			mouseHandlingMode = MouseHandlingMode.None;
 
-			Rectangle rectangle = (Rectangle)sender;
+			var rectangle = (Rectangle)sender;
 			rectangle.ReleaseMouseCapture();
 
 			e.Handled = true;
@@ -238,21 +218,14 @@ namespace CustomEditor.Views
 		/// </summary>
 		private void Rectangle_MouseMove(object sender, MouseEventArgs e)
 		{
+			// We are not in rectangle dragging mode, so don't do anything.
 			if (mouseHandlingMode != MouseHandlingMode.DraggingRectangles)
-			{
-				//
-				// We are not in rectangle dragging mode, so don't do anything.
-				//
 				return;
-			}
 
-			Point curContentPoint = e.GetPosition(Workspace);
-			Vector rectangleDragVector = curContentPoint - origContentMouseDownPoint;
+			var curContentPoint = e.GetPosition(Workspace);
+			var rectangleDragVector = curContentPoint - origContentMouseDownPoint;
 
-			//
 			// When in 'dragging rectangles' mode update the position of the rectangle as the user drags it.
-			//
-
 			origContentMouseDownPoint = curContentPoint;
 
 			Rectangle rectangle = (Rectangle)sender;
@@ -264,6 +237,5 @@ namespace CustomEditor.Views
 			e.Handled = true;
 		}
 		*/
-
 	}
 }

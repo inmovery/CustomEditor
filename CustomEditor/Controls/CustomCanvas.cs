@@ -10,20 +10,19 @@ using System.Windows.Shapes;
 using CustomEditor.Controls.Adorners;
 using CustomEditor.Gestures;
 using CustomEditor.Helpers;
+using CustomEditor.Models;
 using CustomEditor.Models.Events;
-using Action = CustomEditor.Models.Action;
 
 namespace CustomEditor.Controls
 {
 	public class CustomCanvas : Canvas
 	{
+		// todo: для эксперимента с ScrollMode
+		/*
 		public double TopLimit { get; set; }
 		public double RightLimit { get; set; }
 		public double BottomLimit { get; set; }
 		public double LeftLimit { get; set; }
-		//public bool IsPanning => Keyboard.IsKeyDown(PanningKey);
-		//public bool IsZooming => Keyboard.IsKeyDown(ZoomKey);
-		public bool NeedMeasure { get; set; }
 
 		private TranslateTransform _translateTransform;
 		private ScaleTransform _scaleTransform;
@@ -37,53 +36,29 @@ namespace CustomEditor.Controls
 		private Point _viewportBottomRightInitial;
 		private Point _viewportTopLeftInitial;
 
-		private double HighestElement => _parent.TopLimit; // _parent.IsDrawing ? _parent.TopLimit : this.TopLimit;
+		private double HighestElement => _parent.TopLimit;
 
-		private double LowestElement => _parent.BottomLimit; // _parent.IsDrawing ? _parent.BottomLimit : this.BottomLimit;
+		private double LowestElement => _parent.BottomLimit;
 
-		private double MostLeftElement => _parent.LeftLimit; // _parent.IsDrawing ? _parent.LeftLimit : this.LeftLimit;
+		private double MostLeftElement => _parent.LeftLimit;
 
-		private double MostRightElement => _parent.RightLimit; // _parent.IsDrawing ? _parent.RightLimit : this.RightLimit;
+		private double MostRightElement => _parent.RightLimit;
 
-
-		private ScrollMode _canvasContainer;
-		public ScrollMode ScrollContainer => _canvasContainer;
+		public ScrollMode ScrollContainer { get; }
 
 
 		public readonly ScaleTransform ScaleTransform = new ScaleTransform();
 		public readonly TranslateTransform TranslateTransform = new TranslateTransform();
 
-		public override void OnApplyTemplate()
+		public void Initialize()
 		{
-			ScrollContainer.Initalize(this);
-
-			TranslateTransform.Changed += OnTranslateChanged;
+			_canvasContainer = AncestorHelper.FindVisualParent<ScrollMode>(this);
+			_canvasContainer?.Initialize(this);
 		}
+		*/
 
-		private void OnTranslateChanged(object sender, EventArgs e)
-		{
-			RaiseScrollingEvent(e);
-		}
-
-		public static readonly RoutedEvent ScrollingEvent = EventManager.RegisterRoutedEvent(nameof(Scrolling), RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(CustomCanvas));
-		/// <summary>
-		/// Occurs whenever <see cref="RichItemsControl.TranslateTransform"/> changes.
-		/// </summary>
-		public event RoutedEventHandler Scrolling
-		{
-			add { AddHandler(ScrollingEvent, value); }
-			remove { RemoveHandler(ScrollingEvent, value); }
-		}
-
-		internal void RaiseScrollingEvent(object context)
-		{
-			RoutedEventArgs newEventArgs = new RoutedEventArgs(ScrollingEvent, context);
-			RaiseEvent(newEventArgs);
-		}
-
-
-		private LinkedList<Action> _undo;
-		private LinkedList<Action> _redo;
+		//private LinkedList<Action> _undo;
+		//private LinkedList<Action> _redo;
 		private UIElement _selectedItem;
 
 		private Point _startPoint = new Point(-1.0d, -1.0d);
@@ -94,6 +69,7 @@ namespace CustomEditor.Controls
 		protected AdornerLayer AdornerLayer => AdornerLayer.GetAdornerLayer(this);
 
 		public event SelectedItemChangedEventHandler SelectedItemChanged;
+		public event EventHandler TestChanged;
 
 		public static readonly DependencyProperty IsShiftKeyPressedProperty = DependencyProperty.Register(
 			nameof(IsShiftKeyPressed),
@@ -155,20 +131,24 @@ namespace CustomEditor.Controls
 
 		public void UndoLastChange()
 		{
+			/*
 			var undoValue = _undo.First.Value;
 
 			_undo.RemoveFirst();
 			Children.Remove(undoValue.InvolvedElement);
 
 			_redo.AddFirst(undoValue);
+			*/
 		}
 
 		public void RedoLastChange()
 		{
+			/*
 			var redoValue = _redo.First.Value;
 			_redo.RemoveFirst();
 
 			_undo.AddFirst(redoValue);
+			*/
 		}
 
 		public void DeleteSelectedShapes()
@@ -176,20 +156,22 @@ namespace CustomEditor.Controls
 			Children.Remove(SelectedItem);
 		}
 
+		public void RaiseSelectedItemChanged()
+		{
+			SelectedItemChanged?.Invoke(this, new SelectedItemChangedEventArgs(SelectedItem));
+		}
+
+		/*
 		public void AdjustScroll()
 		{
 			ScrollContainer?.AdjustScrollVertically();
 			ScrollContainer?.AdjustScrollHorizontally();
 		}
-
-		public Rect BoundsRelativeTo(FrameworkElement element, Visual relativeTo)
-		{
-			return element?.TransformToVisual(relativeTo).TransformBounds(LayoutInformation.GetLayoutSlot(element)) ??
-			       new Rect();
-		}
+		*/
 
 		protected override void OnPreviewMouseMove(MouseEventArgs eventArgs)
 		{
+			// todo: ниже эксперимент с ScrollMode
 			/*
 			var elementRect = BoundsRelativeTo(SelectedItem as FrameworkElement, this);
 
@@ -197,6 +179,11 @@ namespace CustomEditor.Controls
 			var bottom = elementRect.Bottom;
 			var right = elementRect.Right;
 			var left = elementRect.Left;
+
+			var test = top > 0 || bottom > 0 || right > 0 || left > 0;
+			var stop = 0;
+			if (test)
+				stop = 1;
 
 			TopLimit = Math.Min(TopLimit, top);
 			BottomLimit = Math.Max(BottomLimit, bottom);
@@ -409,6 +396,7 @@ namespace CustomEditor.Controls
 
 		protected void UnselectSingleAdorner(UIElement adornedElement)
 		{
+			SelectedItem = null;
 			var adorners = AdornerLayer.GetAdorners(adornedElement);
 			if (adorners == null)
 				return;

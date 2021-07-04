@@ -100,7 +100,6 @@
 										  IsEnabled="{Binding Path=IsShapeSelected}"
 										  Command="{Binding Path=DeleteCommand}" />
 			</StackPanel>
-
 		</Border>
 		<ScrollViewer Grid.Column="0"
 					  Grid.Row="1"
@@ -108,23 +107,21 @@
 					  HorizontalScrollBarVisibility="Auto"
 					  VerticalScrollBarVisibility="Auto">
 			<!--
-			<controls:ScrollAndPan x:Name="zoomAndPanControl"
-			                       ContentOffsetX="{Binding Path=ContentOffsetX, Mode=TwoWay}"
-			                       ContentOffsetY="{Binding Path=ContentOffsetY, Mode=TwoWay}"
-			                       ContentViewportWidth="{Binding Path=ContentViewportWidth, Mode=OneWayToSource}"
-			                       ContentViewportHeight="{Binding Path=ContentViewportHeight, Mode=OneWayToSource}"
-			                       Background="LightGray"
-			                       MouseDown="zoomAndPanControl_MouseDown"
-			                       MouseUp="zoomAndPanControl_MouseUp"
-			                       MouseMove="zoomAndPanControl_MouseMove"
-			                       MouseWheel="zoomAndPanControl_MouseWheel"
-			                       IsMouseWheelScrollingEnabled="True"
-			                       CanHorizontallyScroll="True"
-			                       CanVerticallyScroll="True">
-				<Grid
-					x:Name="theGrid"
-					Width="{Binding Path=ContentWidth}"
-					Height="{Binding Path=ContentHeight}">
+			<controls:ScrollAndPan x:Name="scrollAndPanControl"
+								   ContentOffsetX="{Binding Path=ContentOffsetX, Mode=TwoWay}"
+								   ContentOffsetY="{Binding Path=ContentOffsetY, Mode=TwoWay}"
+								   ContentViewportWidth="{Binding Path=ContentViewportWidth, Mode=OneWayToSource}"
+								   ContentViewportHeight="{Binding Path=ContentViewportHeight, Mode=OneWayToSource}"
+								   Background="LightGray"
+								   MouseDown="scrollAndPanControl_MouseDown"
+								   MouseUp="scrollAndPanControl_MouseUp"
+								   MouseMove="scrollAndPanControl_MouseMove"
+								   MouseWheel="scrollAndPanControl_MouseWheel"
+								   IsMouseWheelScrollingEnabled="True"
+								   CanHorizontallyScroll="True"
+								   CanVerticallyScroll="True">
+				<Grid Width="{Binding Path=ContentWidth}"
+					  Height="{Binding Path=ContentHeight}">
 					<Canvas
 						x:Name="content"
 						Background="White">
@@ -173,14 +170,18 @@
 				</Grid>
 			</controls:ScrollAndPan>
 			-->
-			
+
+			<!--
+			<controls:ScrollMode x:Name="CanvasContainer">тут канвас</controls:ScrollMode>
+			-->
+
 			<controls:CustomCanvas x:Name="Workspace"
-			                       ClipToBounds="True"
-			                       IsShiftKeyPressed="{Binding IsShiftKeyPressed}"
-			                       IsDrawing="{Binding IsDrawing}"
-			                       Background="Transparent"
-			                       VerticalAlignment="Stretch"
-			                       HorizontalAlignment="Stretch">
+								   ClipToBounds="True"
+								   IsShiftKeyPressed="{Binding IsShiftKeyPressed}"
+								   IsDrawing="{Binding IsDrawing}"
+								   Background="Transparent"
+								   VerticalAlignment="Stretch"
+								   HorizontalAlignment="Stretch">
 				<i:Interaction.Behaviors>
 					<behaviors:DoubleClickToCommandBehavior Command="{Binding ShowEditToolCommand}" />
 				</i:Interaction.Behaviors>
@@ -264,7 +265,7 @@
 							   Margin="0,0,5,0" />
 					<controls:FilteredTextBox x:Name="WidthInputField"
 											  Style="{StaticResource TextBoxStyle}"
-											  MinimumDigit="0"
+											  MinimumDigit="15"
 											  MaximumDigit="500"
 											  Width="100"
 											  Text="{Binding ShapeProperties.Width, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />

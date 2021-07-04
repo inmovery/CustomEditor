@@ -130,7 +130,7 @@ namespace CustomEditor.ViewModels
 
 		public ToolType SelectedToolType => ToolData?.ActiveToolType ?? ToolType.Select;
 
-		public bool IsShapeSelected => WorkspaceCanvas?.SelectedItem is Shape;
+		public bool IsShapeSelected => WorkspaceCanvas?.SelectedItem is AdvancedRectangle or AdvancedPolyline;
 
 		public ObservableCollection<Shape> ShapesCollection { get; set; }
 
@@ -140,7 +140,7 @@ namespace CustomEditor.ViewModels
 			set
 			{
 				_shapeProperties = value;
-				UpdateSelectedShape();
+				// UpdateSelectedShape();
 				RaisePropertyChanged();
 			}
 		}
@@ -155,6 +155,8 @@ namespace CustomEditor.ViewModels
 			}
 		}
 
+		// todo: для теста с ScrollMode
+		/*
 		public double ContentOffsetX
 		{
 			get => _contentOffsetX;
@@ -214,15 +216,44 @@ namespace CustomEditor.ViewModels
 				RaisePropertyChanged();
 			}
 		}
+		*/
 
 		private void WindowLoaded()
 		{
-			//WorkspaceCanvas.SelectedItemChanged += OnSelectedItemChanged;
+			//WorkspaceCanvas.Initialize();
+			WorkspaceCanvas.SelectedItemChanged += OnSelectedItemChanged;
+		}
+
+		public UIElement SelectedItem => WorkspaceCanvas?.SelectedItem;
+
+		private void UpdateRectangleProperties(AdvancedRectangle selectedRectangle)
+		{
+			ShapeProperties.Width = selectedRectangle.Width;
+			ShapeProperties.Height = selectedRectangle.Height;
+			ShapeProperties.Thickness = selectedRectangle.StrokeThickness;
+			ShapeProperties.FillColor = ((SolidColorBrush) selectedRectangle.Fill)?.Color ?? Colors.Transparent;
+			ShapeProperties.BorderColor = ((SolidColorBrush)selectedRectangle.Stroke)?.Color ?? Colors.Transparent;
+		}
+
+		private void UpdatePolylineProperties(AdvancedPolyline selectedPolyline)
+		{
+			ShapeProperties.Width = selectedPolyline.Width;
+			ShapeProperties.Height = selectedPolyline.Height;
+			ShapeProperties.Thickness = selectedPolyline.StrokeThickness;
+			ShapeProperties.FillColor = ((SolidColorBrush)selectedPolyline.Fill)?.Color ?? Colors.Transparent;
+			ShapeProperties.BorderColor = ((SolidColorBrush)selectedPolyline.Stroke)?.Color ?? Colors.Transparent;
 		}
 
 		private void OnSelectedItemChanged(object sender, SelectedItemChangedEventArgs eventArgs)
 		{
+			if (SelectedItem is AdvancedRectangle selectedRectangle)
+				UpdateRectangleProperties(selectedRectangle);
+
+			if (SelectedItem is AdvancedPolyline selectedPolyline)
+				UpdatePolylineProperties(selectedPolyline);
+
 			OnPropertyChanged(nameof(IsActiveWidthAndHeight));
+			OnPropertyChanged(nameof(IsShapeSelected));
 		}
 
 		private void OnBorderColorChanged()
