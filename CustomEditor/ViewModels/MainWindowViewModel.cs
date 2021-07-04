@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -13,6 +14,8 @@ using CustomEditor.Models;
 using CustomEditor.Models.Events;
 using CustomEditor.Services;
 using CustomEditor.ViewModels.Base;
+using Microsoft.Win32;
+using Path = System.IO.Path;
 
 namespace CustomEditor.ViewModels
 {
@@ -31,23 +34,24 @@ namespace CustomEditor.ViewModels
 		private ToolPanelVm _toolData;
 		private VisualProperties _shapeProperties;
 
-		private ToolType _selectedToolType;
-
 		private readonly FileService _fileService;
-		//private readonly DialogService _dialogService;
 
+		/*
 		private double _contentOffsetX;
 		private double _contentOffsetY;
 		private double _contentWidth;
 		private double _contentHeight;
 		private double _contentViewportWidth;
 		private double _contentViewportHeight;
+		*/
 
 		public MainWindowViewModel()
 		{
 			ShapesCollection = new ObservableCollection<Shape>();
 			ShapeProperties = new VisualProperties();
 			ToolData = new ToolPanelVm();
+
+			_fileService = new FileService();
 
 			ShapeProperties.BorderColorChanged += OnBorderColorChanged;
 			ShapeProperties.FillColorChanged += OnFillColorChanged;
@@ -64,6 +68,8 @@ namespace CustomEditor.ViewModels
 
 			UndoCommand = new RelayCommand(() => WorkspaceCanvas.UndoLastChange());
 			RedoCommand = new RelayCommand(() => WorkspaceCanvas.RedoLastChange());
+
+			ImportImageCommand = new RelayCommand(ImportImage);
 
 			ExportCommand = new RelayCommand(ExportCanvas);
 			DeleteCommand = new RelayCommand(DeleteSelectedShapes);
@@ -83,12 +89,13 @@ namespace CustomEditor.ViewModels
 
 		public ICommand UndoCommand { get; }
 		public ICommand RedoCommand { get; }
-
-		public ICommand ShowEditToolCommand { get; }
+		
+		public ICommand ImportImageCommand { get; }
 
 		public ICommand WindowLoadedCommand { get; }
 
-		public bool IsActiveWidthAndHeight => WorkspaceCanvas?.SelectedItem is AdvancedRectangle;
+		public bool IsAvailableWidthAndHeight => WorkspaceCanvas?.SelectedItem is AdvancedRectangle or Image;
+		public bool IsAvailableColorAndThicknessSettings => WorkspaceCanvas?.SelectedItem is AdvancedPolyline or AdvancedRectangle;
 
 		public bool IsShiftKeyPressed
 		{
@@ -130,7 +137,7 @@ namespace CustomEditor.ViewModels
 
 		public ToolType SelectedToolType => ToolData?.ActiveToolType ?? ToolType.Select;
 
-		public bool IsShapeSelected => WorkspaceCanvas?.SelectedItem is AdvancedRectangle or AdvancedPolyline;
+		public bool IsShapeSelected => WorkspaceCanvas?.SelectedItem is AdvancedRectangle or AdvancedPolyline or Image;
 
 		public ObservableCollection<Shape> ShapesCollection { get; set; }
 
@@ -231,7 +238,7 @@ namespace CustomEditor.ViewModels
 			ShapeProperties.Width = selectedRectangle.Width;
 			ShapeProperties.Height = selectedRectangle.Height;
 			ShapeProperties.Thickness = selectedRectangle.StrokeThickness;
-			ShapeProperties.FillColor = ((SolidColorBrush) selectedRectangle.Fill)?.Color ?? Colors.Transparent;
+			ShapeProperties.FillColor = ((SolidColorBrush)selectedRectangle.Fill)?.Color ?? Colors.Transparent;
 			ShapeProperties.BorderColor = ((SolidColorBrush)selectedRectangle.Stroke)?.Color ?? Colors.Transparent;
 		}
 
@@ -244,6 +251,12 @@ namespace CustomEditor.ViewModels
 			ShapeProperties.BorderColor = ((SolidColorBrush)selectedPolyline.Stroke)?.Color ?? Colors.Transparent;
 		}
 
+		private void UpdateImageProperties(Image selectedImage)
+		{
+			ShapeProperties.Width = selectedImage.Width;
+			ShapeProperties.Height = selectedImage.Height;
+		}
+
 		private void OnSelectedItemChanged(object sender, SelectedItemChangedEventArgs eventArgs)
 		{
 			if (SelectedItem is AdvancedRectangle selectedRectangle)
@@ -252,7 +265,11 @@ namespace CustomEditor.ViewModels
 			if (SelectedItem is AdvancedPolyline selectedPolyline)
 				UpdatePolylineProperties(selectedPolyline);
 
-			OnPropertyChanged(nameof(IsActiveWidthAndHeight));
+			if (SelectedItem is Image selectedImage)
+				UpdateImageProperties(selectedImage);
+
+			OnPropertyChanged(nameof(IsAvailableWidthAndHeight));
+			OnPropertyChanged(nameof(IsAvailableColorAndThicknessSettings));
 			OnPropertyChanged(nameof(IsShapeSelected));
 		}
 
@@ -270,7 +287,7 @@ namespace CustomEditor.ViewModels
 			if (ShapeProperties.FillColor == null)
 				return;
 
-			var selectedFillColor = (Color) ShapeProperties.FillColor;
+			var selectedFillColor = (Color)ShapeProperties.FillColor;
 			if (WorkspaceCanvas.SelectedItem is AdvancedRectangle selectedRectangle)
 				selectedRectangle.Fill = new SolidColorBrush(selectedFillColor);
 
@@ -308,11 +325,6 @@ namespace CustomEditor.ViewModels
 				selectedRectangle.Height = selectedHeight;
 		}
 
-		private void UpdateSelectedShape()
-		{
-			// @todo: сделать обновление параметров выбранной фигуры 
-		}
-
 		private void DeleteSelectedShapes()
 		{
 			WorkspaceCanvas.DeleteSelectedShapes();
@@ -320,7 +332,64 @@ namespace CustomEditor.ViewModels
 
 		private void ExportCanvas()
 		{
-			// @todo: сделать экспорт
+			var pixelHeight = (int)WorkspaceCanvas.ActualHeight;
+			var pixelWidth = (int)WorkspaceCanvas.ActualWidth;
+			var dpi = 96d;
+
+			var bitmapObject = new RenderTargetBitmap(pixelWidth, pixelHeight, dpi, dpi, PixelFormats.Pbgra32);
+			bitmapObject.Render(WorkspaceCanvas);
+
+			Export(bitmapObject);
+		}
+
+		private void Export(object obj)
+		{
+			if (obj.Equals(null))
+				return;
+
+			var type = obj.GetType();
+			if (type != typeof(string) && type != typeof(BitmapImage) && type != typeof(RenderTargetBitmap))
+				return;
+
+			try
+			{
+				_fileService.SaveFileDialog(out var selectedImagePath);
+				if (string.IsNullOrEmpty(selectedImagePath))
+					return;
+
+				var extension = Path.GetExtension(selectedImagePath).ToLower();
+
+				BitmapEncoder encoder;
+				switch (extension)
+				{
+					case ".gif":
+						encoder = new GifBitmapEncoder();
+						break;
+					case ".png":
+						encoder = new PngBitmapEncoder();
+						break;
+					case ".jpg":
+					case ".jpeg":
+						encoder = new JpegBitmapEncoder();
+						break;
+					default:
+						return;
+				}
+
+				encoder.Frames.Add(type == typeof(BitmapImage)
+					? BitmapFrame.Create((BitmapImage)obj)
+					: BitmapFrame.Create((RenderTargetBitmap)obj));
+
+				using (var fileStream = new FileStream(selectedImagePath, FileMode.Create))
+				{
+					encoder.Save(fileStream);
+				}
+			}
+			catch (Exception ex)
+			{
+				// todo: изменить на какое-нибудь другое окошко
+				MessageBox.Show("Error: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+			}
 		}
 
 		private void HandleKeyEvent(KeyEventArgs eventArgs)
@@ -331,11 +400,8 @@ namespace CustomEditor.ViewModels
 
 		private void HandleMouseMovePolyline(MouseEventArgs eventArgs)
 		{
-			if (_shape == null)
-				return;
-
-			var polyline = _shape as AdvancedPolyline;
-			polyline.Points[polyline.Points.Count - 1] = eventArgs.GetPosition(WorkspaceCanvas);
+			if (_shape is AdvancedPolyline polyline)
+				polyline.Points[polyline.Points.Count - 1] = eventArgs.GetPosition(WorkspaceCanvas);
 		}
 
 		private void HandleMouseMoveRectangle(MouseEventArgs eventArgs)
@@ -490,14 +556,40 @@ namespace CustomEditor.ViewModels
 			Canvas.SetTop(_shape, 0.0d);
 		}
 
-		private void AddImage()
+		private void ImportImage()
 		{
 			_fileService.OpenFileDialog(out var selectedImagePath);
 			var bitmapImage = new BitmapImage(new Uri(selectedImagePath));
-			var image = new Image()
+
+			var image = new Image();
+
+			var pixelWidth = WorkspaceCanvas.ActualWidth / 4;
+			var pixelHeight = WorkspaceCanvas.ActualHeight / 4;
+			var bitmapWidth = bitmapImage.PixelWidth;
+			var bitmapHeight = bitmapImage.PixelHeight;
+
+			if (bitmapWidth < pixelWidth && bitmapHeight < pixelHeight)
 			{
-				Source = bitmapImage
-			};
+				image.Source = bitmapImage;
+				image.Width = bitmapWidth;
+				image.Height = bitmapHeight;
+			}
+			else
+			{
+				var scaleX = pixelWidth / bitmapWidth;
+				var scaleY = pixelHeight / bitmapHeight;
+				image.Source = new TransformedBitmap(bitmapImage, new ScaleTransform(scaleX, scaleY));
+				image.Width = bitmapWidth * scaleX;
+				image.Height = bitmapHeight * scaleY;
+			}
+
+			image.RenderTransformOrigin = new Point(0.5d, 0.5d);
+			image.SnapsToDevicePixels = true;
+			image.Stretch = Stretch.Fill;
+
+			Canvas.SetLeft(image, 0.0d);
+			Canvas.SetTop(image, 0.0d);
+
 			WorkspaceCanvas.Children.Add(image);
 		}
 	}

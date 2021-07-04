@@ -50,56 +50,91 @@
 				Padding="10"
 				BorderThickness="0,0,0,2"
 				BorderBrush="{StaticResource BlackBrush}">
-			<StackPanel Orientation="Horizontal">
-				<controls:ButtonWithImage PathImage="{StaticResource PointerIcon}"
-										  Style="{StaticResource ActivatedButtonWithImage}"
-										  Width="40"
-										  Height="40"
-										  Fill="{StaticResource BlackBrush}"
-										  IsActive="{Binding ToolData.IsSelectToolActive, Mode=TwoWay}"
-										  Margin="15 0" />
-				<!--
-				<controls:ButtonWithImage PathImage="{StaticResource CapturePointerIcon}"
-										  Style="{StaticResource ActivatedButtonWithImage}"
-										  Width="45"
-										  Height="45"
-										  Fill="{StaticResource BlackBrush}"
-										  Margin="15 0" />
-				-->
+			<Grid>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="*" />
+				</Grid.ColumnDefinitions>
+				<StackPanel Grid.Column="0"
+							Orientation="Horizontal">
+					<controls:ButtonWithImage PathImage="{StaticResource PointerIcon}"
+											  Style="{StaticResource ActivatedButtonWithImage}"
+											  Width="40"
+											  Height="40"
+											  Fill="{StaticResource BlackBrush}"
+											  IsActive="{Binding ToolData.IsSelectToolActive, Mode=TwoWay}"
+											  Margin="15 0" />
+					<!--
+					<controls:ButtonWithImage PathImage="{StaticResource CapturePointerIcon}"
+											  Style="{StaticResource ActivatedButtonWithImage}"
+											  Width="45"
+											  Height="45"
+											  Fill="{StaticResource BlackBrush}"
+											  Margin="15 0" />
+					-->
 
-				<controls:ButtonWithImage PathImage="{StaticResource FilledRectangleIcon}"
-										  Style="{StaticResource ActivatedButtonWithImage}"
-										  Width="45"
-										  Height="45"
-										  Fill="{StaticResource BlackBrush}"
-										  IsActive="{Binding ToolData.IsRectangleToolActive, Mode=TwoWay}"
-										  Margin="15 0" />
+					<controls:ButtonWithImage PathImage="{StaticResource FilledRectangleIcon}"
+											  Style="{StaticResource ActivatedButtonWithImage}"
+											  Width="45"
+											  Height="45"
+											  Fill="{StaticResource BlackBrush}"
+											  IsActive="{Binding ToolData.IsRectangleToolActive, Mode=TwoWay}"
+											  Margin="15 0" />
 
-				<controls:ButtonWithImage PathImage="{StaticResource PolygonIcon}"
-										  Style="{StaticResource ActivatedButtonWithImage}"
-										  Width="45"
-										  Height="45"
-										  Fill="{StaticResource BlackBrush}"
-										  IsActive="{Binding ToolData.IsPolylineToolActive, Mode=TwoWay}"
-										  Margin="15 0" />
+					<controls:ButtonWithImage PathImage="{StaticResource PolygonIcon}"
+											  Style="{StaticResource ActivatedButtonWithImage}"
+											  Width="45"
+											  Height="45"
+											  Fill="{StaticResource BlackBrush}"
+											  IsActive="{Binding ToolData.IsPolylineToolActive, Mode=TwoWay}"
+											  Margin="15 0" />
 
-				<controls:ButtonWithImage PathImage="{StaticResource ExportIcon}"
-										  Style="{StaticResource RegularButtonWithImage}"
-										  Width="35"
-										  Height="35"
-										  Fill="{StaticResource BlackBrush}"
-										  Margin="15 0"
-										  Command="{Binding Path=ExportCommand}" />
+					<controls:ButtonWithImage PathImage="{StaticResource ExportIconSecond}"
+											  Style="{StaticResource RegularButtonWithImage}"
+											  Width="35"
+											  Height="35"
+											  Fill="{StaticResource BlackBrush}"
+											  Margin="15 0"
+											  Command="{Binding Path=ExportCommand}" />
 
-				<controls:ButtonWithImage PathImage="{StaticResource RecycleBinIcon}"
-										  Style="{StaticResource RegularButtonWithImage}"
-										  Width="35"
-										  Height="35"
-										  Fill="{StaticResource BlackBrush}"
-										  Margin="15 0"
-										  IsEnabled="{Binding Path=IsShapeSelected}"
-										  Command="{Binding Path=DeleteCommand}" />
-			</StackPanel>
+					<controls:ButtonWithImage PathImage="{StaticResource RecycleBinIconSecond}"
+											  Style="{StaticResource RegularButtonWithImage}"
+											  Width="35"
+											  Height="35"
+											  Fill="{StaticResource BlackBrush}"
+											  Margin="15 0"
+											  IsEnabled="{Binding Path=IsShapeSelected}"
+											  Command="{Binding Path=DeleteCommand}" />
+
+					<controls:ButtonWithImage PathImage="{StaticResource ImportIcon}"
+											  Style="{StaticResource RegularButtonWithImage}"
+											  Width="35"
+											  Height="35"
+											  Fill="{StaticResource BlackBrush}"
+											  Margin="15 0"
+											  Command="{Binding Path=ImportImageCommand}" />
+				</StackPanel>
+
+				<StackPanel Grid.Column="1"
+							Orientation="Horizontal"
+							HorizontalAlignment="Right">
+					<controls:ButtonWithImage PathImage="{StaticResource UndoActionIcon}"
+											  Style="{StaticResource RegularButtonWithImage}"
+											  Width="25"
+											  Height="25"
+											  Fill="{StaticResource BlackBrush}"
+											  Margin="5,0"
+											  Command="{Binding Path=UndoCommand}" />
+
+					<controls:ButtonWithImage PathImage="{StaticResource RedoActionIcon}"
+											  Style="{StaticResource RegularButtonWithImage}"
+											  Width="25"
+											  Height="25"
+											  Fill="{StaticResource BlackBrush}"
+											  Margin="5,0"
+											  Command="{Binding Path=RedoCommand}" />
+				</StackPanel>
+			</Grid>
 		</Border>
 		<ScrollViewer Grid.Column="0"
 					  Grid.Row="1"
@@ -172,7 +207,7 @@
 			-->
 
 			<!--
-			<controls:ScrollMode x:Name="CanvasContainer">тут канвас</controls:ScrollMode>
+			<controls:ScrollMode x:Name="CanvasContainer">тут типа канвас</controls:ScrollMode>
 			-->
 
 			<controls:CustomCanvas x:Name="Workspace"
@@ -223,20 +258,24 @@
 				<TextBlock Grid.Row="0"
 						   Grid.Column="0"
 						   VerticalAlignment="Center"
-						   Text="Цвет границы" />
+						   Text="Цвет границы"
+						   Visibility="{Binding IsAvailableColorAndThicknessSettings, Converter={StaticResource BoolToVisibilityConverter}}" />
 				<colorPicker:ColorPicker Grid.Row="0"
 										 Grid.Column="1"
 										 VerticalAlignment="Center"
-										 Color="{Binding Path=ShapeProperties.BorderColor, Mode=TwoWay}" />
+										 Color="{Binding Path=ShapeProperties.BorderColor, Mode=TwoWay}"
+										 Visibility="{Binding IsAvailableColorAndThicknessSettings, Converter={StaticResource BoolToVisibilityConverter}}" />
 
 				<TextBlock Grid.Row="1"
 						   Grid.Column="0"
 						   VerticalAlignment="Center"
-						   Text="Цвет заливки" />
+						   Text="Цвет заливки"
+						   Visibility="{Binding IsAvailableColorAndThicknessSettings, Converter={StaticResource BoolToVisibilityConverter}}" />
 				<colorPicker:ColorPicker Grid.Row="1"
 										 Grid.Column="1"
 										 VerticalAlignment="Center"
-										 Color="{Binding Path=ShapeProperties.FillColor, Mode=TwoWay}" />
+										 Color="{Binding Path=ShapeProperties.FillColor, Mode=TwoWay}"
+										 Visibility="{Binding IsAvailableColorAndThicknessSettings, Converter={StaticResource BoolToVisibilityConverter}}" />
 
 				<StackPanel Grid.Row="2"
 							Grid.Column="0"
@@ -245,13 +284,15 @@
 							Margin="0,10">
 					<TextBlock VerticalAlignment="Center"
 							   Text="Толщина границы"
-							   Margin="0,0,5,0" />
+							   Margin="0,0,5,0"
+							   Visibility="{Binding IsAvailableColorAndThicknessSettings, Converter={StaticResource BoolToVisibilityConverter}}" />
 					<controls:FilteredTextBox x:Name="ThicknessInputField"
 											  Style="{StaticResource TextBoxStyle}"
 											  MinimumDigit="0"
 											  MaximumDigit="500"
 											  Width="40"
-											  Text="{Binding ShapeProperties.Thickness, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+											  Text="{Binding ShapeProperties.Thickness, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+											  Visibility="{Binding IsAvailableColorAndThicknessSettings, Converter={StaticResource BoolToVisibilityConverter}}" />
 				</StackPanel>
 
 				<StackPanel Grid.Row="3"
@@ -259,7 +300,7 @@
 							Grid.ColumnSpan="2"
 							Orientation="Horizontal"
 							Margin="0,10"
-							Visibility="{Binding IsActiveWidthAndHeight, Converter={StaticResource BoolToVisibilityConverter}}">
+							Visibility="{Binding IsAvailableWidthAndHeight, Converter={StaticResource BoolToVisibilityConverter}}">
 					<TextBlock VerticalAlignment="Center"
 							   Text="Ширина"
 							   Margin="0,0,5,0" />
@@ -276,7 +317,7 @@
 							Grid.ColumnSpan="2"
 							Orientation="Horizontal"
 							Margin="0,10"
-							Visibility="{Binding IsActiveWidthAndHeight, Converter={StaticResource BoolToVisibilityConverter}}">
+							Visibility="{Binding IsAvailableWidthAndHeight, Converter={StaticResource BoolToVisibilityConverter}}">
 					<TextBlock VerticalAlignment="Center"
 							   Text="Высота"
 							   Margin="0,0,10,0" />
