@@ -12,8 +12,6 @@
 		Title="MainWindow"
 		MinHeight="450"
 		MinWidth="800"
-		Height="450"
-		Width="800"
 		mc:Ignorable="d">
 	<Window.DataContext>
 		<vms:MainWindowViewModel />
@@ -34,6 +32,7 @@
 	</i:Interaction.Triggers>
 	<Window.Resources>
 		<converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+		<converters:DoubleFormatConverter x:Key="DoubleFormatConverter" />
 	</Window.Resources>
 	<Grid>
 		<Grid.RowDefinitions>
@@ -89,14 +88,6 @@
 											  IsActive="{Binding ToolData.IsPolylineToolActive, Mode=TwoWay}"
 											  Margin="15 0" />
 
-					<controls:ButtonWithImage PathImage="{StaticResource ExportIconSecond}"
-											  Style="{StaticResource RegularButtonWithImage}"
-											  Width="35"
-											  Height="35"
-											  Fill="{StaticResource BlackBrush}"
-											  Margin="15 0"
-											  Command="{Binding Path=ExportCommand}" />
-
 					<controls:ButtonWithImage PathImage="{StaticResource RecycleBinIconSecond}"
 											  Style="{StaticResource RegularButtonWithImage}"
 											  Width="35"
@@ -106,6 +97,23 @@
 											  IsEnabled="{Binding Path=IsShapeSelected}"
 											  Command="{Binding Path=DeleteCommand}" />
 
+					<controls:ButtonWithImage PathImage="{StaticResource ExportIconSecond}"
+											  Style="{StaticResource RegularButtonWithImage}"
+											  Width="35"
+											  Height="35"
+											  Fill="{StaticResource BlackBrush}"
+											  Margin="15 0"
+											  Command="{Binding Path=ExportCommand}" />
+
+					<controls:ButtonWithImage PathImage="{StaticResource SaveToProjectFileIcon}"
+											  Style="{StaticResource RegularButtonWithImage}"
+											  Width="35"
+											  Height="35"
+											  Fill="{StaticResource BlackBrush}"
+											  Margin="15 0"
+											  Command="{Binding Path=SaveCanvasToProjectFileCommand}" />
+
+					<!--
 					<controls:ButtonWithImage PathImage="{StaticResource ImportIcon}"
 											  Style="{StaticResource RegularButtonWithImage}"
 											  Width="35"
@@ -113,6 +121,16 @@
 											  Fill="{StaticResource BlackBrush}"
 											  Margin="15 0"
 											  Command="{Binding Path=ImportImageCommand}" />
+					-->
+
+					<controls:ButtonWithImage PathImage="{StaticResource OpenProjectFileIcon}"
+											  Style="{StaticResource RegularButtonWithImage}"
+											  Width="35"
+											  Height="35"
+											  Fill="{StaticResource BlackBrush}"
+											  Margin="15 0"
+											  Command="{Binding Path=LoadProjectFileCommand}" />
+
 				</StackPanel>
 
 				<StackPanel Grid.Column="1"
@@ -214,9 +232,7 @@
 								   ClipToBounds="True"
 								   IsShiftKeyPressed="{Binding IsShiftKeyPressed}"
 								   IsDrawing="{Binding IsDrawing}"
-								   Background="Transparent"
-								   VerticalAlignment="Stretch"
-								   HorizontalAlignment="Stretch">
+								   Background="Transparent">
 				<i:Interaction.Behaviors>
 					<behaviors:DoubleClickToCommandBehavior Command="{Binding ShowEditToolCommand}" />
 				</i:Interaction.Behaviors>
@@ -306,7 +322,7 @@
 							   Margin="0,0,5,0" />
 					<controls:FilteredTextBox x:Name="WidthInputField"
 											  Style="{StaticResource TextBoxStyle}"
-											  MinimumDigit="15"
+											  MinimumDigit="0"
 											  MaximumDigit="500"
 											  Width="100"
 											  Text="{Binding ShapeProperties.Width, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />

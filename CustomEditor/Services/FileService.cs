@@ -1,29 +1,31 @@
-﻿using System.IO;
+﻿using System;
+using CustomEditor.Models;
 using Microsoft.Win32;
 
 namespace CustomEditor.Services
 {
 	public class FileService
 	{
-		public void OpenFileDialog(out string selectedPath)
+		public void OpenFileDialog(out string selectedPath, string filter)
 		{
 			selectedPath = string.Empty;
 			var openFileDialog = new OpenFileDialog
 			{
-				Filter = "Image files (*.png;*.jpeg;*jpg)|*.png;*.jpeg;*jpg|All files (*.*)|*.*"
+				InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
+				Filter = filter
 			};
 
 			if (openFileDialog.ShowDialog() == true)
 				selectedPath = openFileDialog.FileName;
 		}
 
-		public void SaveFileDialog(out string selectedPath)
+		public void SaveFileDialog(out string selectedPath, string filter)
 		{
 			selectedPath = string.Empty;
 			var saveFileDialog = new SaveFileDialog
 			{
-				RestoreDirectory = true,
-				Filter = "Image files (*.png;*.jpeg;*jpg)|*.png;*.jpeg;*jpg|All files (*.*)|*.*"
+				InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
+				Filter = filter
 			};
 
 			if (saveFileDialog.ShowDialog() == true)

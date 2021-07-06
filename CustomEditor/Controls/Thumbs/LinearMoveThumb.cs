@@ -1,17 +1,24 @@
-﻿using System.Windows;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
+using CustomEditor.Helpers;
 
 namespace CustomEditor.Controls.Thumbs
 {
-	public class MoveThumb : Thumb
+	public class LinearMoveThumb : Thumb
 	{
 		private RotateTransform _rotateTransform;
 		private UIElement _adornedElement;
 
-		public MoveThumb()
+		public LinearMoveThumb()
 		{
+			Style = AncestorHelper.FindActiveWindow().FindResource("PointDragThumb") as Style;
 			DragStarted += new DragStartedEventHandler(OnDragStarted);
 			DragDelta += new DragDeltaEventHandler(OnDragDelta);
 		}
@@ -21,7 +28,6 @@ namespace CustomEditor.Controls.Thumbs
 			_adornedElement = DataContext as UIElement;
 
 			var workspaceCanvas = VisualTreeHelper.GetParent(_adornedElement) as CustomCanvas;
-			// workspaceCanvas.CreateRestorePoint();
 
 			if (_adornedElement != null)
 				_rotateTransform = _adornedElement.RenderTransform as RotateTransform;

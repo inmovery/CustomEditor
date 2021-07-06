@@ -66,7 +66,7 @@ namespace CustomEditor.Controls
 
 		private UIElement _previewShape;
 
-		protected AdornerLayer AdornerLayer => AdornerLayer.GetAdornerLayer(this);
+		public AdornerLayer AdornerLayer => AdornerLayer.GetAdornerLayer(this);
 
 		public event SelectedItemChangedEventHandler SelectedItemChanged;
 		public event EventHandler TestChanged;
@@ -392,6 +392,7 @@ namespace CustomEditor.Controls
 			AdornerLayer.Add(polylineAdorner);
 
 			IsEditToolActive = true;
+			SelectedItem = adornedElement;
 		}
 
 		protected void UnselectSingleAdorner(UIElement adornedElement)

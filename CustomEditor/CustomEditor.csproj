@@ -68,6 +68,7 @@
     <Compile Include="Controls\AdornerChrome\RectangleChrome.xaml.cs">
       <DependentUpon>RectangleChrome.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\AdvancedLine.cs" />
     <Compile Include="Controls\AdvancedPolyline.cs" />
     <Compile Include="Controls\ColorPicker\ColorManipulation\HsbConverter.cs" />
     <Compile Include="Controls\ColorPicker\ColorPicker.cs" />
@@ -77,6 +78,7 @@
     <Compile Include="Controls\ScrollAndPan.cs" />
     <Compile Include="Controls\ScrollMode.cs" />
     <Compile Include="Controls\Thumbs\BaseThumb.cs" />
+    <Compile Include="Controls\Thumbs\LinearMoveThumb.cs" />
     <Compile Include="Controls\Thumbs\PointDragThumb.cs" />
     <Compile Include="Controls\Adorners\PolylineAdorner.cs" />
     <Compile Include="Controls\Adorners\RectangleAdorner.cs" />
@@ -91,7 +93,9 @@
     <Compile Include="Controls\Thumbs\MoveThumb.cs" />
     <Compile Include="Controls\Thumbs\ResizeThumb.cs" />
     <Compile Include="Gestures\Zoom.cs" />
+    <Compile Include="Models\Constants.cs" />
     <Compile Include="Models\EventBroker.cs" />
+    <Compile Include="Services\CanvasService.cs" />
     <Compile Include="ViewModels\ToolPanelVm.cs" />
     <Compile Include="Converters\BoolToBrushConverter.cs" />
     <Compile Include="Converters\BoolToThicknessConverter.cs" />

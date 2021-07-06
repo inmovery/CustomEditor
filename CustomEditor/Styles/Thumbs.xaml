@@ -23,14 +23,23 @@
 				Value="15" />
 		<Setter Property="Margin"
 				Value="-4" />
+		<Setter Property="Template">
+			<Setter.Value>
+				<ControlTemplate TargetType="{x:Type Thumb}">
+					<Rectangle Fill="DeepSkyBlue"
+							   StrokeThickness="2"
+							   Stroke="Blue" />
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
 	</Style>
 
 	<Style TargetType="{x:Type Thumb}"
 		   x:Key="PointDragThumb">
 		<Setter Property="Width"
-				Value="15" />
+				Value="20" />
 		<Setter Property="Height"
-				Value="15" />
+				Value="20" />
 		<Setter Property="Template">
 			<Setter.Value>
 				<ControlTemplate TargetType="{x:Type Thumb}">

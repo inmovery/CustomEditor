@@ -7,7 +7,7 @@ namespace CustomEditor.ViewModels
 {
 	public class VisualProperties : BaseViewModel
 	{
-		private Color? _fillColor;
+		private Color _fillColor;
 		private Color _borderColor;
 		private double _thickness;
 		private double _width;
@@ -16,7 +16,7 @@ namespace CustomEditor.ViewModels
 		public VisualProperties()
 		{
 			_fillColor = Colors.Black;
-			_borderColor = Colors.Black;
+			_borderColor = Colors.LightSkyBlue;
 			_thickness = 0.0d;
 			_width = 0.0d;
 			_height = 0.0d;
@@ -28,7 +28,7 @@ namespace CustomEditor.ViewModels
 		public event Action WidthChanged;
 		public event Action HeightChanged;
 
-		public Color? FillColor
+		public Color FillColor
 		{
 			get => _fillColor;
 			set

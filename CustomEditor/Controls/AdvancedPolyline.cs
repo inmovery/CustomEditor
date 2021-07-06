@@ -1,7 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Media;
 using System.Windows.Shapes;
-using CustomEditor.ViewModels;
 
 namespace CustomEditor.Controls
 {
@@ -19,27 +18,39 @@ namespace CustomEditor.Controls
 			set => SetValue(PointsProperty, value);
 		}
 
-		public static readonly DependencyProperty FillRuleProperty = DependencyProperty.Register(
-			nameof(FillRule),
-			typeof(FillRule),
+		public static readonly DependencyProperty BorderColorProperty = DependencyProperty.Register(
+			nameof(BorderColor),
+			typeof(Color),
 			typeof(AdvancedPolyline),
-			new FrameworkPropertyMetadata(FillRule.EvenOdd, FrameworkPropertyMetadataOptions.AffectsRender));
+			new FrameworkPropertyMetadata(Colors.LightSkyBlue, FrameworkPropertyMetadataOptions.AffectsRender));
 
-		public FillRule FillRule
+		public Color BorderColor
 		{
-			get => (FillRule)GetValue(FillRuleProperty);
-			set => SetValue(FillRuleProperty, value);
+			get => (Color)GetValue(BorderColorProperty);
+			set => SetValue(BorderColorProperty, value);
+		}
+
+		public static readonly DependencyProperty FillColorProperty = DependencyProperty.Register(
+			nameof(FillColor),
+			typeof(Color),
+			typeof(AdvancedPolyline),
+			new FrameworkPropertyMetadata(Colors.Black, FrameworkPropertyMetadataOptions.AffectsRender));
+
+		public Color FillColor
+		{
+			get => (Color)GetValue(FillColorProperty);
+			set => SetValue(FillColorProperty, value);
 		}
 
 		protected override Geometry DefiningGeometry => DefineGeometry();
 
 		private Geometry DefineGeometry()
 		{
-			var _polylineGeometry = Geometry.Empty;
+			Geometry polylineGeometry;
 			var points = Points;
 			var pathFigure = new PathFigure();
 			if (points == null)
-				_polylineGeometry = Geometry.Empty;
+				polylineGeometry = Geometry.Empty;
 			else
 			{
 				if (points.Count > 0)
@@ -57,12 +68,12 @@ namespace CustomEditor.Controls
 
 				var pathGeometry = new PathGeometry();
 				pathGeometry.Figures.Add(pathFigure);
-				pathGeometry.FillRule = FillRule;
+				pathGeometry.FillRule = FillRule.EvenOdd;
 
-				_polylineGeometry = pathGeometry.Bounds == Rect.Empty ? Geometry.Empty : pathGeometry;
+				polylineGeometry = pathGeometry.Bounds == Rect.Empty ? Geometry.Empty : pathGeometry;
 			}
 
-			return _polylineGeometry;
+			return polylineGeometry;
 		}
 	}
 }
