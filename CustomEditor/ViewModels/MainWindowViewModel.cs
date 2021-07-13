@@ -9,11 +9,13 @@ using System.Windows.Shapes;
 using CustomEditor.Commands;
 using CustomEditor.Controls;
 using CustomEditor.Controls.Adorners;
+using CustomEditor.Controls.ZoomAndPan;
 using CustomEditor.Helpers;
 using CustomEditor.Models;
 using CustomEditor.Models.Events;
 using CustomEditor.Services;
 using CustomEditor.ViewModels.Base;
+using MouseHandlingMode = CustomEditor.Controls.MouseHandlingMode;
 
 namespace CustomEditor.ViewModels
 {
@@ -34,6 +36,28 @@ namespace CustomEditor.ViewModels
 
 		private readonly FileService _fileService;
 		private readonly CanvasService _canvasService;
+
+
+		/// <summary>
+		/// Specifies the current state of the mouse handling logic.
+		/// </summary>
+		private MouseHandlingMode mouseHandlingMode = MouseHandlingMode.None;
+
+		/// <summary>
+		/// The point that was clicked relative to the ZoomAndPanControl.
+		/// </summary>
+		private Point origZoomAndPanControlMouseDownPoint;
+
+		/// <summary>
+		/// The point that was clicked relative to the WorkspaceCanvas that is contained within the ZoomAndPanControl.
+		/// </summary>
+		private Point origContentMouseDownPoint;
+
+		/// <summary>
+		/// Records which mouse button clicked during mouse dragging.
+		/// </summary>
+		private MouseButton mouseButtonDown;
+
 
 		/*
 		private double _contentOffsetX;
@@ -77,7 +101,127 @@ namespace CustomEditor.ViewModels
 			LoadProjectFileCommand = new RelayCommand(LoadProjectFile);
 			SaveCanvasToProjectFileCommand = new RelayCommand(SaveCanvasToProjectFile);
 
-			WindowLoadedCommand = new RelayCommand(WindowLoaded);
+			WindowLoadedCommand = new RelayCommand(OnWindowLoaded);
+			WindowPreviewMouseMoveCommand = new RelayCommand<MouseEventArgs>(HandleWindowPreviewMouseMove);
+			WindowSizeChangedCommand = new RelayCommand<SizeChangedEventArgs>(HandleWindowSizeChange);
+
+
+			ZoomAndPanControlMouseDownCommand = new RelayCommand<MouseButtonEventArgs>(OnZoomAndPanControlMouseDown);
+			ZoomAndPanControlMouseUpCommand = new RelayCommand<MouseButtonEventArgs>(OnZoomAndPanControlMouseUp);
+			ZoomAndPanControlMouseMoveCommand = new RelayCommand<MouseEventArgs>(OnZoomAndPanControlMouseMove);
+			ZoomAndPanControlMouseWheelCommand = new RelayCommand<MouseWheelEventArgs>(OnZoomAndPanControlMouseWheel);
+
+		}
+
+		/// <summary>
+		/// Zoom the viewport out by a small increment.
+		/// </summary>
+		private void ZoomOut()
+		{
+			ZoomAndPanControl.ContentScale -= 0.1;
+		}
+
+		/// <summary>
+		/// Zoom the viewport in by a small increment.
+		/// </summary>
+		private void ZoomIn()
+		{
+			ZoomAndPanControl.ContentScale += 0.1;
+		}
+
+		private void OnZoomAndPanControlMouseDown(MouseButtonEventArgs e)
+		{
+			if (SelectedToolType == ToolType.Rectangle)
+				return;
+
+			WorkspaceCanvas.Focus();
+			Keyboard.Focus(WorkspaceCanvas);
+
+			mouseButtonDown = e.ChangedButton;
+			origZoomAndPanControlMouseDownPoint = e.GetPosition(ZoomAndPanControl);
+			origContentMouseDownPoint = e.GetPosition(WorkspaceCanvas);
+
+			if ((Keyboard.Modifiers & ModifierKeys.Shift) != 0 &&
+			    (e.ChangedButton == MouseButton.Left ||
+			     e.ChangedButton == MouseButton.Right))
+			{
+				// Shift + left- or right-down initiates zooming mode.
+				mouseHandlingMode = MouseHandlingMode.Zooming;
+			}
+			else if (mouseButtonDown == MouseButton.Left)
+			{
+				// Just a plain old left-down initiates panning mode.
+				mouseHandlingMode = MouseHandlingMode.Panning;
+			}
+
+			if (mouseHandlingMode != MouseHandlingMode.None)
+			{
+				// Capture the mouse so that we eventually receive the mouse up event.
+				ZoomAndPanControl.CaptureMouse();
+				e.Handled = true;
+			}
+		}
+
+		private void OnZoomAndPanControlMouseUp(MouseButtonEventArgs e)
+		{
+			if (SelectedToolType == ToolType.Rectangle)
+				return;
+
+			if (mouseHandlingMode != MouseHandlingMode.None)
+			{
+				if (mouseHandlingMode == MouseHandlingMode.Zooming)
+				{
+					if (mouseButtonDown == MouseButton.Left)
+					{
+						// Shift + left-click zooms in on the WorkspaceCanvas.
+						ZoomIn();
+					}
+					else if (mouseButtonDown == MouseButton.Right)
+					{
+						// Shift + left-click zooms out from the WorkspaceCanvas.
+						ZoomOut();
+					}
+				}
+
+				ZoomAndPanControl.ReleaseMouseCapture();
+				mouseHandlingMode = MouseHandlingMode.None;
+				e.Handled = true;
+			}
+		}
+
+		private void OnZoomAndPanControlMouseMove(MouseEventArgs e)
+		{
+			if (SelectedToolType == ToolType.Rectangle)
+				return;
+
+			if (mouseHandlingMode == MouseHandlingMode.Panning)
+			{
+				//
+				// The user is left-dragging the mouse.
+				// Pan the viewport by the appropriate amount.
+				//
+				Point curContentMousePoint = e.GetPosition(WorkspaceCanvas);
+				Vector dragOffset = curContentMousePoint - origContentMouseDownPoint;
+
+				ZoomAndPanControl.ContentOffsetX -= dragOffset.X;
+				ZoomAndPanControl.ContentOffsetY -= dragOffset.Y;
+
+				e.Handled = true;
+			}
+		}
+
+		private void OnZoomAndPanControlMouseWheel(MouseWheelEventArgs e)
+		{
+			e.Handled = true;
+
+			if (e.Delta > 0)
+			{
+				ZoomIn();
+			}
+			else if (e.Delta < 0)
+			{
+				ZoomOut();
+			}
 		}
 
 		private void LoadProjectFile()
@@ -119,6 +263,18 @@ namespace CustomEditor.ViewModels
 
 		public ICommand WindowLoadedCommand { get; }
 
+		public ICommand WindowPreviewMouseMoveCommand { get; }
+
+		public ICommand WindowSizeChangedCommand { get; }
+
+
+
+		public ICommand ZoomAndPanControlMouseDownCommand { get; }
+		public ICommand ZoomAndPanControlMouseUpCommand { get; }
+		public ICommand ZoomAndPanControlMouseMoveCommand { get; }
+		public ICommand ZoomAndPanControlMouseWheelCommand { get; }
+
+
 		public bool IsAvailableWidthAndHeight => WorkspaceCanvas?.SelectedItem is AdvancedRectangle or Image;
 		public bool IsAvailableColorAndThicknessSettings => WorkspaceCanvas?.SelectedItem is AdvancedPolyline or AdvancedRectangle;
 
@@ -152,7 +308,70 @@ namespace CustomEditor.ViewModels
 			}
 		}
 
+		public int CanvasStartXPoint => (int)CalculateStartPoint().TopLeft.X;
+
+		public int CanvasStartYPoint => (int)CalculateStartPoint().TopLeft.Y;
+
+		public int CanvasEndXPoint => (int)CalculateStartPoint().BottomRight.X;
+
+		public int CanvasEndYPoint => (int)CalculateStartPoint().BottomRight.Y;
+
+		public int RandomPointX
+		{
+			get
+			{
+				try
+				{
+					return (int) Mouse.GetPosition(AncestorHelper.FindActiveWindow()).X;
+				}
+				catch
+				{
+					return 0;
+				}
+			}
+		}
+
+		public int RandomPointY
+		{
+			get
+			{
+				try
+				{
+					return (int) Mouse.GetPosition(AncestorHelper.FindActiveWindow()).Y;
+				}
+				catch
+				{
+					return 0;
+				}
+			}
+		}
+
+		private Point _currentPosition;
+		public Point CurrentPosition
+		{
+			get => _currentPosition;
+			set
+			{
+				_currentPosition = value;
+				RaisePropertyChanged();
+			}
+		}
+
+		private Rect CalculateStartPoint()
+		{
+			var activeWindow = AncestorHelper.FindActiveWindow();
+			if (activeWindow == null)
+				return new Rect();
+
+			var bounds = WorkspaceCanvas.BoundsRelativeTo(activeWindow);
+
+			return bounds;
+		}
+
+
 		public CustomCanvas WorkspaceCanvas => AncestorHelper.FindActiveWindow()?.FindName("Workspace") as CustomCanvas;
+
+		public ZoomAndPanControl ZoomAndPanControl => AncestorHelper.FindActiveWindow()?.FindName("zoomAndPanControl") as ZoomAndPanControl;
 
 		public FilteredTextBox ThicknessInputField => AncestorHelper.FindActiveWindow()?.FindName("ThicknessInputField") as FilteredTextBox;
 
@@ -250,10 +469,44 @@ namespace CustomEditor.ViewModels
 		}
 		*/
 
-		private void WindowLoaded()
+		private void OnWindowLoaded()
 		{
 			//WorkspaceCanvas.Initialize();
 			WorkspaceCanvas.SelectedItemChanged += OnSelectedItemChanged;
+
+			OnPropertyChanged(nameof(CanvasStartXPoint));
+			OnPropertyChanged(nameof(CanvasStartYPoint));
+			OnPropertyChanged(nameof(CanvasEndXPoint));
+			OnPropertyChanged(nameof(CanvasEndYPoint));
+
+			UpdateCanvasSize();
+
+			// todo: добавить обновление width и height на изменение размеров окна
+		}
+
+		private void UpdateCanvasSize()
+		{
+			//WorkspaceCanvas.Width = WorkspaceCanvas.ActualWidth;
+			//WorkspaceCanvas.Height = WorkspaceCanvas.ActualHeight;
+		}
+
+		private void HandleWindowPreviewMouseMove(MouseEventArgs eventArgs)
+		{
+			var activeWindow = AncestorHelper.FindActiveWindow();
+			if (activeWindow == null)
+				return;
+
+			CurrentPosition = Mouse.GetPosition(activeWindow);
+
+			/*
+			if (CurrentPosition.X > CanvasEndXPoint && IsDrawing)
+				WorkspaceCanvas.Width += CurrentPosition.X - CanvasEndXPoint;
+			*/
+		}
+
+		private void HandleWindowSizeChange(SizeChangedEventArgs eventArgs)
+		{
+			UpdateCanvasSize();
 		}
 
 		public UIElement SelectedItem => WorkspaceCanvas?.SelectedItem;
@@ -421,10 +674,23 @@ namespace CustomEditor.ViewModels
 
 				_endPoint = eventArgs.GetPosition(WorkspaceCanvas);
 
+				OnPropertyChanged(nameof(RandomPointX));
+				OnPropertyChanged(nameof(RandomPointY));
+
 				var startX = Math.Min(_startPoint.X, _endPoint.X);
 				var startY = Math.Min(_startPoint.Y, _endPoint.Y);
 				var endX = Math.Max(_startPoint.X, _endPoint.X);
 				var endY = Math.Max(_startPoint.Y, _endPoint.Y);
+
+				var activeWindow = AncestorHelper.FindActiveWindow();
+				var point = eventArgs.GetPosition(activeWindow);
+				/*
+				if (point.X > CanvasEndXPoint)
+				{
+					var stop = point.X;
+					WorkspaceCanvas.Width += 15;
+				}
+				*/
 
 				if (_shape == null)
 				{
@@ -442,6 +708,7 @@ namespace CustomEditor.ViewModels
 					rectangleShape.Margin = new Thickness(startX, startY, 0, 0);
 
 					_shape = rectangleShape;
+					IsDrawing = true;
 				}
 			}
 		}
@@ -505,6 +772,8 @@ namespace CustomEditor.ViewModels
 		{
 			if (SelectedToolType != ToolType.Rectangle)
 				return;
+
+			IsDrawing = false;
 
 			WorkspaceCanvas.SelectedItem = _shape;
 			WorkspaceCanvas.AddSelectionAdorner(_shape);

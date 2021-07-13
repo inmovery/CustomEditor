@@ -19,6 +19,7 @@ namespace CustomEditor.Controls.Adorners
 
 			rectangleBaseChrome = new RectangleChrome();
 			Visuals.Add(rectangleBaseChrome);
+			IsHitTestVisible = true;
 		}
 
 		public event Action<UIElement> DoubleClickExecuted;

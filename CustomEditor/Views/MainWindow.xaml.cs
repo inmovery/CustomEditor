@@ -1,15 +1,13 @@
 ﻿using System.Windows;
+using System.Windows.Input;
+using CustomEditor.Controls.ZoomAndPan;
+using CustomEditor.Models;
+using CustomEditor.ViewModels;
 
 namespace CustomEditor.Views
 {
 	public partial class MainWindow : Window
 	{
-		public MainWindow()
-		{
-			InitializeComponent();
-		}
-
-		/*
 		/// <summary>
 		/// Specifies the current state of the mouse handling logic.
 		/// </summary>
@@ -18,10 +16,10 @@ namespace CustomEditor.Views
 		/// <summary>
 		/// The point that was clicked relative to the ZoomAndPanControl.
 		/// </summary>
-		private Point origScrollAndPanControlMouseDownPoint;
+		private Point origZoomAndPanControlMouseDownPoint;
 
 		/// <summary>
-		/// The point that was clicked relative to the content that is contained within the ZoomAndPanControl.
+		/// The point that was clicked relative to the WorkspaceCanvas that is contained within the ZoomAndPanControl.
 		/// </summary>
 		private Point origContentMouseDownPoint;
 
@@ -30,212 +28,151 @@ namespace CustomEditor.Views
 		/// </summary>
 		private MouseButton mouseButtonDown;
 
-		/// <summary>
-		/// Saves the previous zoom rectangle, pressing the backspace key jumps back to this zoom rectangle.
-		/// </summary>
-		private Rect prevZoomRect;
-
-		/// <summary>
-		/// Save the previous content scale, pressing the backspace key jumps back to this scale.
-		/// </summary>
-		private double prevZoomScale;
-
-		/// <summary>
-		/// Set to 'true' when the previous zoom rect is saved.
-		/// </summary>
-		private bool prevZoomRectSet = false;
-
-		/// <summary>
-		/// Event raised when the Window has loaded.
-		/// </summary>
-		private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+		public MainWindow()
 		{
-			ExpandContent();
+			InitializeComponent();
 		}
 
-		/// <summary>
-		/// Expand the content area to fit the rectangles.
-		/// </summary>
-		private void ExpandContent()
-		{
-			double xOffset = 0;
-			double yOffset = 0;
-			Rect contentRect = new Rect(0, 0, 0, 0);
-			foreach (var element in Workspace.Children)
-			{
-				var uiElement = element as FrameworkElement;
-				var data = uiElement.BoundsRelativeTo(Workspace);
+        /// <summary>
+        /// Event raised on mouse down in the ZoomAndPanControl.
+        /// </summary>
+        private void zoomAndPanControl_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+	        var vm = DataContext as MainWindowViewModel;
+	        if (vm?.SelectedToolType == ToolType.Rectangle)
+		        return;
 
-				if (data.X < xOffset)
-				{
-					xOffset = data.X;
-				}
+	        Workspace.Focus();
+            Keyboard.Focus(Workspace);
 
-				if (data.Y < yOffset)
-				{
-					yOffset = data.Y;
-				}
+            mouseButtonDown = e.ChangedButton;
+            origZoomAndPanControlMouseDownPoint = e.GetPosition(zoomAndPanControl);
+            origContentMouseDownPoint = e.GetPosition(Workspace);
 
-				contentRect.Union(new Rect(data.X, data.Y, data.Width, data.Height));
-			}
+            if ((Keyboard.Modifiers & ModifierKeys.Shift) != 0 &&
+                (e.ChangedButton == MouseButton.Left ||
+                 e.ChangedButton == MouseButton.Right))
+            {
+                // Shift + left- or right-down initiates zooming mode.
+                mouseHandlingMode = MouseHandlingMode.Zooming;
+            }
+            else if (mouseButtonDown == MouseButton.Left)
+            {
+                // Just a plain old left-down initiates panning mode.
+                mouseHandlingMode = MouseHandlingMode.Panning;
+            }
 
-			//
-			// Translate all rectangles so they are in positive space.
-			//
-			xOffset = Math.Abs(xOffset);
-			yOffset = Math.Abs(yOffset);
+            if (mouseHandlingMode != MouseHandlingMode.None)
+            {
+                // Capture the mouse so that we eventually receive the mouse up event.
+                zoomAndPanControl.CaptureMouse();
+                e.Handled = true;
+            }
+        }
 
-			foreach (var element in Workspace.Children)
-			{
-				var uiElement = element as FrameworkElement;
-				var data = uiElement.BoundsRelativeTo(Workspace);
+        /// <summary>
+        /// Event raised on mouse up in the ZoomAndPanControl.
+        /// </summary>
+        private void zoomAndPanControl_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+	        var vm = DataContext as MainWindowViewModel;
+	        if (vm?.SelectedToolType == ToolType.Rectangle)
+		        return;
 
-				data.X += xOffset;
-				data.Y += yOffset;
-			}
+            if (mouseHandlingMode != MouseHandlingMode.None)
+            {
+                if (mouseHandlingMode == MouseHandlingMode.Zooming)
+                {
+                    if (mouseButtonDown == MouseButton.Left)
+                    {
+                        // Shift + left-click zooms in on the WorkspaceCanvas.
+                        ZoomIn();
+                    }
+                    else if (mouseButtonDown == MouseButton.Right)
+                    {
+                        // Shift + left-click zooms out from the WorkspaceCanvas.
+                        ZoomOut();
+                    }
+                }
 
-			((MainWindowViewModel) DataContext).ContentWidth = contentRect.Width;
-			((MainWindowViewModel) DataContext).ContentHeight = contentRect.Height;
-		}
+                zoomAndPanControl.ReleaseMouseCapture();
+                mouseHandlingMode = MouseHandlingMode.None;
+                e.Handled = true;
+            }
+        }
 
-		/// <summary>
-		/// Event raised on mouse down in the ZoomAndPanControl.
-		/// </summary>
-		private void scrollAndPanControl_MouseDown(object sender, MouseButtonEventArgs e)
-		{
-			Workspace.Focus();
-			Keyboard.Focus(Workspace);
+        /// <summary>
+        /// Event raised on mouse move in the ZoomAndPanControl.
+        /// </summary>
+        private void zoomAndPanControl_MouseMove(object sender, MouseEventArgs e)
+        {
+	        var vm = DataContext as MainWindowViewModel;
+	        if (vm?.SelectedToolType == ToolType.Rectangle)
+		        return;
 
-			mouseButtonDown = e.ChangedButton;
-			origScrollAndPanControlMouseDownPoint = e.GetPosition(scrollAndPanControl);
-			origContentMouseDownPoint = e.GetPosition(Workspace);
+            if (mouseHandlingMode == MouseHandlingMode.Panning)
+            {
+                //
+                // The user is left-dragging the mouse.
+                // Pan the viewport by the appropriate amount.
+                //
+                Point curContentMousePoint = e.GetPosition(Workspace);
+                Vector dragOffset = curContentMousePoint - origContentMouseDownPoint;
 
-			mouseHandlingMode = MouseHandlingMode.Panning;
+                zoomAndPanControl.ContentOffsetX -= dragOffset.X;
+                zoomAndPanControl.ContentOffsetY -= dragOffset.Y;
 
-			if (mouseHandlingMode != MouseHandlingMode.None)
-			{
-				// Capture the mouse so that we eventually receive the mouse up event.
-				scrollAndPanControl.CaptureMouse();
-				e.Handled = true;
-			}
-		}
+                e.Handled = true;
+            }
+        }
 
+        /// <summary>
+        /// Event raised by rotating the mouse wheel
+        /// </summary>
+        private void zoomAndPanControl_MouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            e.Handled = true;
 
-		/// <summary>
-		/// Event raised on mouse up in the ZoomAndPanControl.
-		/// </summary>
-		private void scrollAndPanControl_MouseUp(object sender, MouseButtonEventArgs e)
-		{
-			if (mouseHandlingMode != MouseHandlingMode.None)
-			{
-				scrollAndPanControl.ReleaseMouseCapture();
-				mouseHandlingMode = MouseHandlingMode.None;
-				e.Handled = true;
-			}
-		}
+            if (e.Delta > 0)
+            {
+                ZoomIn();
+            }
+            else if (e.Delta < 0)
+            {
+                ZoomOut();
+            }
+        }
 
-		/// <summary>
-		/// Event raised on mouse move in the ZoomAndPanControl.
-		/// </summary>
-		private void scrollAndPanControl_MouseMove(object sender, MouseEventArgs e)
-		{
-			if (mouseHandlingMode == MouseHandlingMode.Panning)
-			{
-				Point curContentMousePoint = e.GetPosition(Workspace);
-				Vector dragOffset = curContentMousePoint - origContentMouseDownPoint;
+        /// <summary>
+        /// The 'ZoomIn' command (bound to the plus key) was executed.
+        /// </summary>
+        private void ZoomIn_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            ZoomIn();
+        }
 
-				scrollAndPanControl.ContentOffsetX -= dragOffset.X;
-				scrollAndPanControl.ContentOffsetY -= dragOffset.Y;
+        /// <summary>
+        /// The 'ZoomOut' command (bound to the minus key) was executed.
+        /// </summary>
+        private void ZoomOut_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            ZoomOut();
+        }
 
-				e.Handled = true;
-			}
-		}
+        /// <summary>
+        /// Zoom the viewport out by a small increment.
+        /// </summary>
+        private void ZoomOut()
+        {
+            zoomAndPanControl.ContentScale -= 0.1;
+        }
 
-		/// <summary>
-		/// Event raised by rotating the mouse wheel
-		/// </summary>
-		private void scrollAndPanControl_MouseWheel(object sender, MouseWheelEventArgs e)
-		{
-			e.Handled = true;
-
-			if (e.Delta > 0)
-			{
-				Point curContentMousePoint = e.GetPosition(Workspace);
-				scrollAndPanControl.LineLeft();
-			}
-			else if (e.Delta < 0)
-			{
-				Point curContentMousePoint = e.GetPosition(Workspace);
-				scrollAndPanControl.LineRight();
-			}
-		}
-
-		/// <summary>
-		/// Event raised when a mouse button is clicked down over a Rectangle.
-		/// </summary>
-		private void Rectangle_MouseDown(object sender, MouseButtonEventArgs e)
-		{
-			Workspace.Focus();
-			Keyboard.Focus(Workspace);
-
-			// When the shift key is held down special zooming logic is executed in content_MouseDown,
-			// so don't handle mouse input here.
-			if ((Keyboard.Modifiers & ModifierKeys.Shift) != 0)
-				return;
-
-			// We are in some other mouse handling mode, don't do anything.
-			if (mouseHandlingMode != MouseHandlingMode.None)
-				return;
-
-			mouseHandlingMode = MouseHandlingMode.DraggingRectangles;
-			origContentMouseDownPoint = e.GetPosition(Workspace);
-
-			var rectangle = (Rectangle)sender;
-			rectangle.CaptureMouse();
-
-			e.Handled = true;
-		}
-
-		/// <summary>
-		/// Event raised when a mouse button is released over a Rectangle.
-		/// </summary>
-		private void Rectangle_MouseUp(object sender, MouseButtonEventArgs e)
-		{
-			// We are not in rectangle dragging mode.
-			if (mouseHandlingMode != MouseHandlingMode.DraggingRectangles)
-				return;
-
-			mouseHandlingMode = MouseHandlingMode.None;
-
-			var rectangle = (Rectangle)sender;
-			rectangle.ReleaseMouseCapture();
-
-			e.Handled = true;
-		}
-
-		/// <summary>
-		/// Event raised when the mouse cursor is moved when over a Rectangle.
-		/// </summary>
-		private void Rectangle_MouseMove(object sender, MouseEventArgs e)
-		{
-			// We are not in rectangle dragging mode, so don't do anything.
-			if (mouseHandlingMode != MouseHandlingMode.DraggingRectangles)
-				return;
-
-			var curContentPoint = e.GetPosition(Workspace);
-			var rectangleDragVector = curContentPoint - origContentMouseDownPoint;
-
-			// When in 'dragging rectangles' mode update the position of the rectangle as the user drags it.
-			origContentMouseDownPoint = curContentPoint;
-
-			Rectangle rectangle = (Rectangle)sender;
-			Canvas.SetLeft(rectangle, Canvas.GetLeft(rectangle) + rectangleDragVector.X);
-			Canvas.SetTop(rectangle, Canvas.GetTop(rectangle) + rectangleDragVector.Y);
-
-			ExpandContent();
-
-			e.Handled = true;
-		}
-		*/
-	}
+        /// <summary>
+        /// Zoom the viewport in by a small increment.
+        /// </summary>
+        private void ZoomIn()
+        {
+            zoomAndPanControl.ContentScale += 0.1;
+        }
+    }
 }

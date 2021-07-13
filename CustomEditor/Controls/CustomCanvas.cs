@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -54,6 +55,45 @@ namespace CustomEditor.Controls
 		{
 			_canvasContainer = AncestorHelper.FindVisualParent<ScrollMode>(this);
 			_canvasContainer?.Initialize(this);
+		}
+		*/
+
+		static CustomCanvas()
+		{
+			DefaultStyleKeyProperty.OverrideMetadata(typeof(CustomCanvas), new FrameworkPropertyMetadata(typeof(CustomCanvas)));
+		}
+
+		/*
+		protected override Size MeasureOverride(Size constraint)
+		{
+			Size toReport = new Size();
+
+			foreach (UIElement element in InternalChildren)
+			{
+				//Get the left most and top most point.
+				//No using Bottom or Right in case the controls actual bottom and right most points are less then the desired height/width
+				var left = GetLeft(element);
+				var top = GetTop(element);
+
+				left = double.IsNaN(left) ? 0 : left;
+				top = double.IsNaN(top) ? 0 : top;
+
+				element.Measure(constraint);
+
+				Size desiredSize = element.DesiredSize;
+
+				if (!double.IsNaN(desiredSize.Width) && !double.IsNaN(desiredSize.Height))
+				{
+					toReport.Width = toReport.Width > left + desiredSize.Width ? toReport.Width : left + desiredSize.Width;
+					toReport.Height = toReport.Height > top + desiredSize.Height ? toReport.Height : top + desiredSize.Height;
+				}
+			}
+
+			//Make sure scroll includes the margins incase of a border or something
+			toReport.Width += Margin.Right;
+			toReport.Height += Margin.Bottom;
+
+			return toReport;
 		}
 		*/
 
@@ -337,6 +377,14 @@ namespace CustomEditor.Controls
 			return new Rect(minX, minY, maxX - minX, maxY - minY);
 		}
 
+		protected override void OnMouseLeave(MouseEventArgs e)
+		{
+			var test = e.GetPosition(this);
+			var test2 = e.Source;
+
+			base.OnMouseLeave(e);
+		}
+
 		private bool AreIntersectedRectangles(Rect first, Rect second)
 		{
 			if (first.TopLeft.X > second.BottomRight.X)
@@ -371,6 +419,11 @@ namespace CustomEditor.Controls
 				var isSelectedElementNan = double.IsNaN(selectedElement.Width);
 				if (isSelectedElementNan && uiElement is AdvancedPolyline polyline)
 					EditorHelper.UpdatePolylineLayoutProperties(ref polyline);
+
+				/*
+				if (isSelectedElementNan && uiElement is AdvancedRectangle rectangle)
+					EditorHelper.UpdateRectangleLayoutProperties(ref rectangle);
+				*/
 
 				AdornerLayer.Add(rectangleAdorner);
 			}

@@ -9,9 +9,11 @@
 		xmlns:behaviors="clr-namespace:CustomEditor.Behaviors"
 		xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
 		xmlns:colorPicker="clr-namespace:CustomEditor.Controls.ColorPicker"
+		xmlns:zoomAndPan="clr-namespace:CustomEditor.Controls.ZoomAndPan"
 		Title="MainWindow"
 		MinHeight="450"
 		MinWidth="800"
+		FocusManager.FocusedElement="{Binding ElementName=scroller}"
 		mc:Ignorable="d">
 	<Window.DataContext>
 		<vms:MainWindowViewModel />
@@ -21,19 +23,69 @@
 			<i:InvokeCommandAction Command="{Binding WindowPreviewKeyDownCommand}"
 								   PassEventArgsToCommand="True" />
 		</i:EventTrigger>
+
 		<i:EventTrigger EventName="PreviewKeyUp">
 			<i:InvokeCommandAction Command="{Binding WindowPreviewKeyUpCommand}"
 								   PassEventArgsToCommand="True" />
 		</i:EventTrigger>
+
 		<i:EventTrigger EventName="Loaded">
 			<i:InvokeCommandAction Command="{Binding WindowLoadedCommand}"
 								   PassEventArgsToCommand="True" />
 		</i:EventTrigger>
+
+		<i:EventTrigger EventName="PreviewMouseMove">
+			<i:InvokeCommandAction Command="{Binding WindowPreviewMouseMoveCommand}"
+								   PassEventArgsToCommand="True" />
+		</i:EventTrigger>
+
+		<i:EventTrigger EventName="SizeChanged">
+			<i:InvokeCommandAction Command="{Binding WindowSizeChangedCommand}"
+								   PassEventArgsToCommand="True" />
+		</i:EventTrigger>
 	</i:Interaction.Triggers>
+
 	<Window.Resources>
 		<converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
 		<converters:DoubleFormatConverter x:Key="DoubleFormatConverter" />
+
+		<!-- UI commands. -->
+		<RoutedUICommand x:Key="Commands.ZoomOut" />
+		<RoutedUICommand x:Key="Commands.ZoomIn" />
 	</Window.Resources>
+
+	<Window.InputBindings>
+
+		<!--
+        Bind keys to commands.
+        -->
+		<KeyBinding
+			Key="Minus"
+			Command="{StaticResource Commands.ZoomOut}"
+		/>
+		<KeyBinding
+			Key="Plus"
+			Command="{StaticResource Commands.ZoomIn}"
+		/>
+
+	</Window.InputBindings>
+
+	<Window.CommandBindings>
+
+		<!--
+        Bind commands to event handlers.
+        -->
+		<CommandBinding 
+			Command="{StaticResource Commands.ZoomOut}" 
+			Executed="ZoomOut_Executed" 
+		/>
+		<CommandBinding 
+			Command="{StaticResource Commands.ZoomIn}" 
+			Executed="ZoomIn_Executed" 
+		/>
+
+	</Window.CommandBindings>
+
 	<Grid>
 		<Grid.RowDefinitions>
 			<RowDefinition Height="Auto" />
@@ -156,87 +208,96 @@
 		</Border>
 		<ScrollViewer Grid.Column="0"
 					  Grid.Row="1"
+					  x:Name="scroller"
 					  CanContentScroll="True"
-					  HorizontalScrollBarVisibility="Auto"
-					  VerticalScrollBarVisibility="Auto">
-			<!--
-			<controls:ScrollAndPan x:Name="scrollAndPanControl"
-								   ContentOffsetX="{Binding Path=ContentOffsetX, Mode=TwoWay}"
-								   ContentOffsetY="{Binding Path=ContentOffsetY, Mode=TwoWay}"
-								   ContentViewportWidth="{Binding Path=ContentViewportWidth, Mode=OneWayToSource}"
-								   ContentViewportHeight="{Binding Path=ContentViewportHeight, Mode=OneWayToSource}"
-								   Background="LightGray"
-								   MouseDown="scrollAndPanControl_MouseDown"
-								   MouseUp="scrollAndPanControl_MouseUp"
-								   MouseMove="scrollAndPanControl_MouseMove"
-								   MouseWheel="scrollAndPanControl_MouseWheel"
-								   IsMouseWheelScrollingEnabled="True"
-								   CanHorizontallyScroll="True"
-								   CanVerticallyScroll="True">
-				<Grid Width="{Binding Path=ContentWidth}"
-					  Height="{Binding Path=ContentHeight}">
-					<Canvas
-						x:Name="content"
-						Background="White">
-						<Rectangle
-							Canvas.Left="50"
-							Canvas.Top="50"
-							Width="80"
-							Height="150"
-							Fill="Blue"
-							Cursor="Hand"
-							MouseDown="Rectangle_MouseDown"
-							MouseUp="Rectangle_MouseUp"
-							MouseMove="Rectangle_MouseMove" />
-						<Rectangle
-							Canvas.Left="550"
-							Canvas.Top="350"
-							Width="80"
-							Height="150"
-							Fill="Green"
-							Cursor="Hand"
-							MouseDown="Rectangle_MouseDown"
-							MouseUp="Rectangle_MouseUp"
-							MouseMove="Rectangle_MouseMove" />
-						<Rectangle
-							Canvas.Left="850"
-							Canvas.Top="850"
-							Width="30"
-							Height="20"
-							Fill="Purple"
-							Cursor="Hand"
-							MouseDown="Rectangle_MouseDown"
-							MouseUp="Rectangle_MouseUp"
-							MouseMove="Rectangle_MouseMove" />
-						<Rectangle
-							Canvas.Left="1850"
-							Canvas.Top="1850"
-							Width="80"
-							Height="150"
-							Fill="Red"
-							Cursor="Hand"
-							MouseDown="Rectangle_MouseDown"
-							MouseUp="Rectangle_MouseUp"
-							MouseMove="Rectangle_MouseMove"
-						/>
-					</Canvas>
-				</Grid>
-			</controls:ScrollAndPan>
-			-->
+					  HorizontalScrollBarVisibility="Visible"
+					  VerticalScrollBarVisibility="Visible">
+			<zoomAndPan:ZoomAndPanControl x:Name="zoomAndPanControl"
+			                              Background="LightGray">
+				<i:Interaction.Triggers>
+					<i:EventTrigger EventName="MouseDown">
+						<i:InvokeCommandAction Command="{Binding ZoomAndPanControlMouseDownCommand}"
+						                       PassEventArgsToCommand="True" />
+					</i:EventTrigger>
+					<i:EventTrigger EventName="MouseUp">
+						<i:InvokeCommandAction Command="{Binding ZoomAndPanControlMouseUpCommand}"
+						                       PassEventArgsToCommand="True" />
+					</i:EventTrigger>
+					<i:EventTrigger EventName="MouseMove">
+						<i:InvokeCommandAction Command="{Binding ZoomAndPanControlMouseMoveCommand}"
+						                       PassEventArgsToCommand="True" />
+					</i:EventTrigger>
+					<i:EventTrigger EventName="MouseWheel">
+						<i:InvokeCommandAction Command="{Binding ZoomAndPanControlMouseWheelCommand}"
+						                       PassEventArgsToCommand="True" />
+					</i:EventTrigger>
+				</i:Interaction.Triggers>
 
-			<!--
-			<controls:ScrollMode x:Name="CanvasContainer">тут типа канвас</controls:ScrollMode>
-			-->
+				<controls:CustomCanvas x:Name="Workspace"
+				                       ClipToBounds="True"
+				                       IsShiftKeyPressed="{Binding IsShiftKeyPressed}"
+				                       IsDrawing="{Binding IsDrawing}"
+				                       Background="White"
+				                       Width="2000"
+				                       Height="2000">
+					<i:Interaction.Triggers>
+						<i:EventTrigger EventName="PreviewMouseDown">
+							<i:InvokeCommandAction Command="{Binding CanvasPreviewMouseDownCommand}"
+							                       PassEventArgsToCommand="True" />
+						</i:EventTrigger>
+						<i:EventTrigger EventName="PreviewMouseUp">
+							<i:InvokeCommandAction Command="{Binding CanvasPreviewMouseUpCommand}"
+							                       PassEventArgsToCommand="True" />
+						</i:EventTrigger>
+						<i:EventTrigger EventName="PreviewMouseMove">
+							<i:InvokeCommandAction Command="{Binding CanvasPreviewMouseMoveCommand}"
+							                       PassEventArgsToCommand="True" />
+						</i:EventTrigger>
+					</i:Interaction.Triggers>
 
+					<!--
+					<Rectangle Canvas.Left="50"
+					           Canvas.Top="50"
+					           Width="80"
+					           Height="150"
+					           Fill="Blue"
+					           Cursor="Hand" />
+					<Rectangle
+						Canvas.Left="550"
+						Canvas.Top="350"
+						Width="80"
+						Height="150"
+						Fill="Green"
+						Cursor="Hand"
+					/>
+					<Rectangle
+						Canvas.Left="850"
+						Canvas.Top="850"
+						Width="30"
+						Height="20"
+						Fill="Purple"
+						Cursor="Hand"
+					/>
+					<Rectangle
+						Canvas.Left="1850"
+						Canvas.Top="1850"
+						Width="80"
+						Height="150"
+						Fill="Red"
+						Cursor="Hand"
+					/>
+					-->
+
+				</controls:CustomCanvas>
+			</zoomAndPan:ZoomAndPanControl>
+			<!--
 			<controls:CustomCanvas x:Name="Workspace"
-								   ClipToBounds="True"
-								   IsShiftKeyPressed="{Binding IsShiftKeyPressed}"
-								   IsDrawing="{Binding IsDrawing}"
-								   Background="Transparent">
-				<i:Interaction.Behaviors>
-					<behaviors:DoubleClickToCommandBehavior Command="{Binding ShowEditToolCommand}" />
-				</i:Interaction.Behaviors>
-
+			                       ClipToBounds="True"
+			                       IsShiftKeyPressed="{Binding IsShiftKeyPressed}"
+			                       IsDrawing="{Binding IsDrawing}"
+			                       Background="Transparent"
+			                       Width="2000"
+			                       Height="2000">
 				<i:Interaction.Triggers>
 					<i:EventTrigger EventName="PreviewMouseDown">
 						<i:InvokeCommandAction Command="{Binding CanvasPreviewMouseDownCommand}"
@@ -244,14 +305,15 @@
 					</i:EventTrigger>
 					<i:EventTrigger EventName="PreviewMouseUp">
 						<i:InvokeCommandAction Command="{Binding CanvasPreviewMouseUpCommand}"
-											   PassEventArgsToCommand="True" />
+						                       PassEventArgsToCommand="True" />
 					</i:EventTrigger>
 					<i:EventTrigger EventName="PreviewMouseMove">
 						<i:InvokeCommandAction Command="{Binding CanvasPreviewMouseMoveCommand}"
-											   PassEventArgsToCommand="True" />
+						                       PassEventArgsToCommand="True" />
 					</i:EventTrigger>
 				</i:Interaction.Triggers>
 			</controls:CustomCanvas>
+			-->
 		</ScrollViewer>
 		<Border Grid.Column="1"
 				Grid.Row="1"
@@ -261,6 +323,7 @@
 
 			<Grid VerticalAlignment="Top">
 				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto" />
 					<RowDefinition Height="Auto" />
 					<RowDefinition Height="Auto" />
 					<RowDefinition Height="Auto" />
@@ -343,6 +406,51 @@
 											  MaximumDigit="500"
 											  Width="100"
 											  Text="{Binding ShapeProperties.Height, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+				</StackPanel>
+
+				<StackPanel Grid.Row="5"
+				            Grid.Column="0"
+				            Grid.ColumnSpan="2"
+				            Orientation="Vertical">
+					<TextBlock Text="{Binding CanvasStartXPoint}"
+					           Margin="5"
+					           Foreground="Black"
+					           FontSize="16" />
+
+					<TextBlock Text="{Binding CanvasStartYPoint}"
+					           Margin="5"
+					           Foreground="Black"
+					           FontSize="16" />
+
+					<TextBlock Text="{Binding CanvasEndXPoint}"
+					           Margin="5"
+					           Foreground="Black"
+					           FontSize="16" />
+
+					<TextBlock Text="{Binding CanvasEndYPoint}"
+					           Margin="5"
+					           Foreground="Black"
+					           FontSize="16" />
+
+					<TextBlock Text="{Binding RandomPointX}"
+					           Margin="5"
+					           Foreground="Black"
+					           FontSize="16" />
+
+					<TextBlock Text="{Binding RandomPointY}"
+					           Margin="5"
+					           Foreground="Black"
+					           FontSize="16" />
+
+					<TextBlock Text="{Binding CurrentPosition.X}"
+					           Margin="5"
+					           Foreground="Black"
+					           FontSize="16" />
+
+					<TextBlock Text="{Binding CurrentPosition.Y}"
+					           Margin="5"
+					           Foreground="Black"
+					           FontSize="16" />
 				</StackPanel>
 			</Grid>
 		</Border>

@@ -54,32 +54,36 @@
 							Cursor="SizeWE" />
 
 		<thumbs:RotateThumb Style="{StaticResource RotateThumbControl}"
-							  Margin="-18,-18,0,0"
-							  VerticalAlignment="Top"
-							  HorizontalAlignment="Left" />
+							Margin="-18,-18,0,0"
+							VerticalAlignment="Top"
+							HorizontalAlignment="Left"
+							VisualAngle="270" />
 
 		<thumbs:RotateThumb Style="{StaticResource RotateThumbControl}"
-							  Margin="0,-20,-20,0"
-							  VerticalAlignment="Top"
-							  HorizontalAlignment="Right">
+							Margin="0,-20,-20,0"
+							VerticalAlignment="Top"
+							HorizontalAlignment="Right"
+							VisualAngle="0">
 			<thumbs:RotateThumb.RenderTransform>
 				<RotateTransform Angle="90" />
 			</thumbs:RotateThumb.RenderTransform>
 		</thumbs:RotateThumb>
 
 		<thumbs:RotateThumb Style="{StaticResource RotateThumbControl}"
-							  Margin="0,0,-18,-18"
-							  VerticalAlignment="Bottom"
-							  HorizontalAlignment="Right">
+							Margin="0,0,-18,-18"
+							VerticalAlignment="Bottom"
+							HorizontalAlignment="Right"
+							VisualAngle="90">
 			<thumbs:RotateThumb.RenderTransform>
 				<RotateTransform Angle="180" />
 			</thumbs:RotateThumb.RenderTransform>
 		</thumbs:RotateThumb>
 
 		<thumbs:RotateThumb Style="{StaticResource RotateThumbControl}"
-							  Margin="-18,0,0,-18"
-							  VerticalAlignment="Bottom"
-							  HorizontalAlignment="Left">
+							Margin="-18,0,0,-18"
+							VerticalAlignment="Bottom"
+							HorizontalAlignment="Left"
+							VisualAngle="180">
 			<thumbs:RotateThumb.RenderTransform>
 				<RotateTransform Angle="270" />
 			</thumbs:RotateThumb.RenderTransform>

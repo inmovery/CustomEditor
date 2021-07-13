@@ -46,6 +46,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -75,6 +76,9 @@
     <Compile Include="Controls\ColorPicker\ColorManipulation\Hsb.cs" />
     <Compile Include="Controls\FilteredTextBox.cs" />
     <Compile Include="Controls\MouseHandlingMode.cs" />
+    <Compile Include="Controls\RotateCursor.xaml.cs">
+      <DependentUpon>RotateCursor.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\ScrollAndPan.cs" />
     <Compile Include="Controls\ScrollMode.cs" />
     <Compile Include="Controls\Thumbs\BaseThumb.cs" />
@@ -92,7 +96,13 @@
     <Compile Include="Controls\AdvancedRectangle.cs" />
     <Compile Include="Controls\Thumbs\MoveThumb.cs" />
     <Compile Include="Controls\Thumbs\ResizeThumb.cs" />
+    <Compile Include="Controls\ZoomAndPan\AnimationHelper.cs" />
+    <Compile Include="Controls\ZoomAndPan\MouseHandlingMode.cs" />
+    <Compile Include="Controls\ZoomAndPan\ZoomAndPanControl.cs" />
+    <Compile Include="Controls\ZoomAndPan\ZoomAndPanControl_IScrollInfo.cs" />
     <Compile Include="Gestures\Zoom.cs" />
+    <Compile Include="Helpers\CursorHelper.cs" />
+    <Compile Include="Helpers\IconsHelper.cs" />
     <Compile Include="Models\Constants.cs" />
     <Compile Include="Models\EventBroker.cs" />
     <Compile Include="Services\CanvasService.cs" />
@@ -123,6 +133,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\AdornerChrome\SizeChrome.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\RotateCursor.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -211,6 +225,8 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Resource Include="RotateCursor.cur" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
